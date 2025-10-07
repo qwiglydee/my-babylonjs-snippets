@@ -9,6 +9,7 @@ import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import type { Nullable } from "@babylonjs/core/types";
 
 import { babylonCtx, type BabylonCtx } from "./context";
+import { debug } from "./utils/debug";
 
 @customElement("my-stuff")
 export class MyStuffElem extends ReactiveElement {
@@ -43,24 +44,29 @@ export class MyStuffElem extends ReactiveElement {
     }
 
     _createItem = (type: number, idx: string) => {
+        let mesh;
         switch(type) {
             case 0:
-                return MeshBuilder.CreateBox(`box.${idx}`, { size: this.size }, this.ctx!.scene);
+                mesh = MeshBuilder.CreateBox(`box.${idx}`, { size: this.size }, this.ctx!.scene);
+                break;
             case 1:
-                return MeshBuilder.CreateSphere(`ball.${idx}`, { diameter: this.size }, this.ctx!.scene);
+                mesh = MeshBuilder.CreateSphere(`ball.${idx}`, { diameter: this.size }, this.ctx!.scene);
+                break;
             case 2:
-                return MeshBuilder.CreateCylinder(`cone.${idx}`, { height: this.size, diameterBottom: this.size, diameterTop: 0 }, this.ctx!.scene);
+                mesh = MeshBuilder.CreateCylinder(`cone.${idx}`, { height: this.size, diameterBottom: this.size, diameterTop: 0 }, this.ctx!.scene);
+                break;
             case 3:
-                return MeshBuilder.CreateIcoSphere(`diamond.${idx}`, { radius: 0.5 * this.size, subdivisions: 1 }, this.ctx!.scene);
+                mesh = MeshBuilder.CreateIcoSphere(`diamond.${idx}`, { radius: 0.5 * this.size, subdivisions: 1 }, this.ctx!.scene);
+                break;
             default:
                 throw Error();
         }
+        mesh.position = this.#randomLoc();
+        return mesh;
     }
 
     async #createStuff() {
-        for(let i = 0; i < this.count; i++) {
-            let mesh = this._createItem(i % 4, (i + 1).toString().padStart(3, '0'));
-            mesh.position = this.#randomLoc();
-        }
+        debug(this, "creating", { count: this.count });
+        for(let i = 0; i < this.count; i++) this._createItem(i % 4, (i + 1).toString().padStart(3, '0'));
     }
 }

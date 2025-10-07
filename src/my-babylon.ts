@@ -140,6 +140,7 @@ export class MyBabylonElem extends ReactiveElement {
     }
 
     async #init() {
+        debug(this, "initializing");
         this.engine = new Engine(this.canvas, undefined, ENGOPTIONS);
         this.scene = new Scene(this.engine, SCNOPTIONS);
         this.scene.useRightHandedSystem = this.rightHanded;

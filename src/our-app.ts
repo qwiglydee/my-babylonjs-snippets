@@ -33,7 +33,6 @@ export class OurAppElem extends ReactiveElement {
 
     override connectedCallback(): void {
         super.connectedCallback();
-        debug(this, "connected");
         this.ctx = {
             status: "Hello",
             foo: "..."
@@ -41,7 +40,6 @@ export class OurAppElem extends ReactiveElement {
     }
 
     override update(changes: PropertyValues) {
-        if (!this.hasUpdated) debug(this, "created");
         debugChanges(this, "updating", changes);
         super.update(changes);
     }
