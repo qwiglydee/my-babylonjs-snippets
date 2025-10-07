@@ -22,6 +22,7 @@ import { assert } from "./utils/asserts";
 import { debug } from "./utils/debug";
 import { bubbleEvent } from "./utils/events";
 import { AxesViewer } from "@babylonjs/core/Debug/axesViewer";
+import { Tags } from "@babylonjs/core/Misc/tags";
 
 const ENGOPTIONS: EngineOptions = {
     antialias: true,
@@ -38,6 +39,16 @@ const SCNOPTIONS: SceneOptions = {};
 export class MyBabylonElem extends ReactiveElement {
     @provide({ context: babylonCtx })
     ctx: Nullable<BabylonCtx> = null;
+
+    /** this notifies all plugged in subscribers */
+    #refreshCtx() {
+        this.ctx = {
+            size: this.worldSize,
+            scene: this.scene,
+            utils: this.utils,
+            camera: this.camera,
+        };
+    }
 
     @property({ type: Boolean })
     rightHanded = false;
@@ -147,6 +158,8 @@ export class MyBabylonElem extends ReactiveElement {
             camera.useAutoRotationBehavior = true;
         }
 
+        this.scene.getNodes().forEach(n => Tags.AddTagsTo(n, "default"))
+
         this.camera = this.scene.activeCamera;
 
         if (this.picking) {
@@ -173,13 +186,7 @@ export class MyBabylonElem extends ReactiveElement {
         new AxesViewer(this.utils.utilityLayerScene);
 
         await this.scene.whenReadyAsync(true);
-
-        this.ctx = {
-            size: this.worldSize,
-            scene: this.scene,
-            utils: this.utils,
-            camera: this.camera,
-        };
+        this.#refreshCtx();
     }
 
     #dispose() {

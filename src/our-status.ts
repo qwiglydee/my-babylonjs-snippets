@@ -5,8 +5,8 @@ import { consume } from "@lit/context";
 import { type AppCtx, appCtx } from "./context";
 
 
-@customElement("our-something")
-export class OurSomethingElem extends LitElement {
+@customElement("our-status")
+export class OurStatusElem extends LitElement {
     @consume({ context: appCtx, subscribe: true })
     @state()
     ctx!: AppCtx;
