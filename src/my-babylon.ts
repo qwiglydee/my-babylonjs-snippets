@@ -1,28 +1,28 @@
 import { provide } from "@lit/context";
-import { css, ReactiveElement } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { css, ReactiveElement, type PropertyValues } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
 
 import { PointerDragBehavior } from "@babylonjs/core/Behaviors/Meshes/pointerDragBehavior";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import type { Camera } from "@babylonjs/core/Cameras/camera";
 import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
+import { AxesViewer } from "@babylonjs/core/Debug/axesViewer";
 import { Engine } from "@babylonjs/core/Engines/engine";
 import type { EngineOptions } from "@babylonjs/core/Engines/thinEngine";
 import { PointerEventTypes, PointerInfo } from "@babylonjs/core/Events/pointerEvents";
 import "@babylonjs/core/Helpers/sceneHelpers";
 import { Color3, Color4, Vector3 } from "@babylonjs/core/Maths";
-import type { Mesh } from "@babylonjs/core/Meshes/mesh";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import { Tags } from "@babylonjs/core/Misc/tags";
 import "@babylonjs/core/Rendering/outlineRenderer";
 import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
 import { Scene, type SceneOptions } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
 
-import { type BabylonCtx, babylonCtx, type PickDetail } from "./context";
+import { babylonCtx, type BabylonCtx, type PickDetail } from "./context";
 import { assert } from "./utils/asserts";
 import { debug } from "./utils/debug";
 import { bubbleEvent } from "./utils/events";
-import { AxesViewer } from "@babylonjs/core/Debug/axesViewer";
-import { Tags } from "@babylonjs/core/Misc/tags";
 
 const ENGOPTIONS: EngineOptions = {
     antialias: true,
@@ -39,16 +39,6 @@ const SCNOPTIONS: SceneOptions = {};
 export class MyBabylonElem extends ReactiveElement {
     @provide({ context: babylonCtx })
     ctx: Nullable<BabylonCtx> = null;
-
-    /** this notifies all plugged in subscribers */
-    #refreshCtx() {
-        this.ctx = {
-            size: this.worldSize,
-            scene: this.scene,
-            utils: this.utils,
-            camera: this.camera,
-        };
-    }
 
     @property({ type: Boolean })
     rightHanded = false;
@@ -139,7 +129,9 @@ export class MyBabylonElem extends ReactiveElement {
         super.disconnectedCallback();
     }
 
-    async #init() {
+    getMeshes() { return this.scene.getMeshesByTags("!default"); }
+
+    #init() {
         debug(this, "initializing");
         this.engine = new Engine(this.canvas, undefined, ENGOPTIONS);
         this.scene = new Scene(this.engine, SCNOPTIONS);
@@ -186,7 +178,9 @@ export class MyBabylonElem extends ReactiveElement {
 
         new AxesViewer(this.utils.utilityLayerScene);
 
-        await this.scene.whenReadyAsync(true);
+        // delay updating untill next event loop cycle
+        this.scene.onNewMeshAddedObservable.add(() => this.#invalidateCtx());
+        this.scene.onMeshRemovedObservable.add(() => this.#invalidateCtx());
         this.#refreshCtx();
     }
 
@@ -194,6 +188,36 @@ export class MyBabylonElem extends ReactiveElement {
         this.scene.dispose();
         this.engine.dispose();
     }
+
+    override update(changes: PropertyValues) {
+        if(changes.has('_ctx_dirty')) this.#refreshCtx();
+        super.update(changes);
+    }
+
+
+    @state()
+    _ctx_dirty = true;
+
+    #invalidateCtx() {
+        this._ctx_dirty = true;
+    }
+
+    /** this notifies all plugged in subscribers */
+    async #refreshCtx() {
+        if (!this._ctx_dirty) return;
+        await this.scene.whenReadyAsync(true);
+        const models = this.getMeshes();
+        this.ctx = {
+            size: this.worldSize,
+            scene: this.scene,
+            utils: this.utils,
+            bounds: Mesh.MinMax(models),
+            count: models.length,
+        };
+        this._ctx_dirty = false;
+        debug(this, `CTX == (${this.ctx.count})`, this.ctx);
+    }
+
 
     _picked: Nullable<Mesh> = null;
 

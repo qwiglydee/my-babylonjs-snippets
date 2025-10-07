@@ -4,6 +4,7 @@ import type { Scene } from "@babylonjs/core/scene";
 import type { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
 import type { Camera } from "@babylonjs/core/Cameras/camera";
 import type { Nullable } from "@babylonjs/core/types";
+import type { Vector3 } from "@babylonjs/core/Maths";
 
 export interface AppCtx {
     status: string;
@@ -18,7 +19,8 @@ export interface BabylonCtx {
     size: number;
     scene: Scene;
     utils: UtilityLayerRenderer;
-    camera: Nullable<Camera>;
+    count: number;
+    bounds: { min: Vector3, max: Vector3 }
 }
 
 export const babylonCtx = createContext<Nullable<BabylonCtx>>(Symbol('babylon'));
