@@ -21,6 +21,7 @@ import { type BabylonCtx, babylonCtx, type PickDetail } from "./context";
 import { assert } from "./utils/asserts";
 import { debug } from "./utils/debug";
 import { bubbleEvent } from "./utils/events";
+import { AxesViewer } from "@babylonjs/core/Debug/axesViewer";
 
 const ENGOPTIONS: EngineOptions = {
     antialias: true,
@@ -37,6 +38,9 @@ const SCNOPTIONS: SceneOptions = {};
 export class MyBabylonElem extends ReactiveElement {
     @provide({ context: babylonCtx })
     ctx: Nullable<BabylonCtx> = null;
+
+    @property({ type: Boolean })
+    rightHanded = false;
 
     @property({ type: Number })
     worldSize = 100;
@@ -127,6 +131,7 @@ export class MyBabylonElem extends ReactiveElement {
     async #init() {
         this.engine = new Engine(this.canvas, undefined, ENGOPTIONS);
         this.scene = new Scene(this.engine, SCNOPTIONS);
+        this.scene.useRightHandedSystem = this.rightHanded;
         this.scene.clearColor = Color4.FromHexString(getComputedStyle(this).getPropertyValue("--my-background-color"));
         this.utils = UtilityLayerRenderer.DefaultUtilityLayer;
 
@@ -147,23 +152,25 @@ export class MyBabylonElem extends ReactiveElement {
         if (this.picking) {
             this.scene.onPointerObservable.add((info: PointerInfo) => {
                 if (info.type == PointerEventTypes.POINTERTAP) {
-                    if (info.pickInfo?.pickedMesh) this.onpick(info.pickInfo); else this.unpick();
+                    if (info.pickInfo?.pickedMesh) this.onpick(info.pickInfo);
+                    else this.unpick();
                 }
             });
-    
+
             if (this.dragging) {
-                this.#dragBeh = new PointerDragBehavior({ dragPlaneNormal: Vector3.Up()});
+                this.#dragBeh = new PointerDragBehavior({ dragPlaneNormal: Vector3.Up() });
                 this.#dragBeh.dragDeltaRatio = 0.2;
 
                 this.#dragBeh.onDragStartObservable.add(() => {
                     this.ongrabbed(this.#dragBeh!.attachedNode as Mesh);
-                })
+                });
                 this.#dragBeh.onDragEndObservable.add(() => {
                     this.ondropped(this.#dragBeh!.attachedNode as Mesh);
-                })
+                });
             }
         }
 
+        new AxesViewer(this.utils.utilityLayerScene);
 
         await this.scene.whenReadyAsync(true);
 
