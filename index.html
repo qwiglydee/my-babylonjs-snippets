@@ -44,7 +44,8 @@
 <body>
     
     <our-app class="h-100 container p-0 border rounded-3">
-        <my-babylon rightHanded defaultEnv defaultGround defaultLight defaultCamera picking dragging>
+        <my-babylon worldSize="32" rightHanded defaultEnv defaultLight defaultCamera picking dragging>
+            <my-ground opacity="0.25"></my-ground>
             <my-stuff radius="4" count="4"></my-stuff>
         </my-babylon>
         <our-something></our-something>
@@ -59,6 +60,7 @@
             };
             window.my = { 
                 babylon: document.querySelector("my-babylon"),
+                ground: document.querySelector("my-ground"),
                 stuff: document.querySelector("my-stuff"),
             };
             window.V3 = Vector3;

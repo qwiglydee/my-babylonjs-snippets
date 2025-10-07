@@ -37,7 +37,7 @@ export class MyStuffElem extends ReactiveElement {
         const radius = this.radius ?? this.ctx!.size * 0.5;
 
         const rndc = () => (Math.random() * 2 - 1) * radius
-        const snap = (coord: number) => Math.floor(coord / this.size) * this.size; 
+        const snap = (coord: number) => this.size * (0.5 + Math.floor(coord / this.size)); 
 
         return new V3(snap(rndc()), 0.5 * this.size, snap(rndc()));
     }
