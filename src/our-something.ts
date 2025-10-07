@@ -12,7 +12,7 @@ import { debug } from "./utils/debug";
 export class OurSomethingElem extends LitElement {
     @consume({ context: appCtx, subscribe: true })
     @state()
-    ctx: Nullable<AppCtx> = null;
+    ctx!: AppCtx;
 
     static override styles = css`
         :host {
@@ -24,19 +24,9 @@ export class OurSomethingElem extends LitElement {
         }
     `
 
-    override connectedCallback(): void {
-        super.connectedCallback();
-        debug(this, "connected");
-    }
-
-    override update(changes: PropertyValues) {
-        super.update(changes);
-    }
-
     override render() {
-        if (!this.ctx) return nothing;
         return html`
-            <div class="message">${this.ctx.foo}</div>
+            <div class="message">${this.ctx.status}</div>
         `
     }
 }

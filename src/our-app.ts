@@ -14,7 +14,7 @@ import { debug, debugChanges } from "./utils/debug";
 @customElement("our-app")
 export class OurAppElem extends ReactiveElement {
     @provide({ context: appCtx })
-    ctx: Nullable<AppCtx> = null;
+    ctx!: AppCtx;
 
     @property()
     foo: string = "Foo";
@@ -31,6 +31,10 @@ export class OurAppElem extends ReactiveElement {
     override connectedCallback(): void {
         super.connectedCallback();
         debug(this, "connected");
+        this.ctx = {
+            status: "Hello",
+            foo: "..."
+        }
     }
 
     override update(changes: PropertyValues) {
@@ -40,7 +44,7 @@ export class OurAppElem extends ReactiveElement {
     }
 
     override updated(changed: PropertyValues): void {
-        // NB: broadcasting ctx may result to new changes 
+        // NB: broadcasting the ctx may result to new changes somehow
         if (changed.has('foo')) {
             this.ctx = { ...this.ctx, foo: this.foo };
         }

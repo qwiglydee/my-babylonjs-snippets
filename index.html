@@ -32,10 +32,9 @@
 
         my-babylon {
             position: absolute;
-            display: block;
             width: 100%;
             height: 100%;
-            background-color: var(--bs-dark);
+            --my-background-color: var(--bs-dark);
         }
     </style>
     <script src="src/utils/fullscreen.js"></script>
@@ -44,11 +43,8 @@
 
 <body>
     <our-app class="h-100 container p-0 border rounded-3">
-        <my-babylon>
-            <!-- shadow dom contains canvas and stuff -->
-            <my-stuff>
-                <!-- a babylon-aware component -->
-            </my-stuff>
+        <my-babylon defaultEnv defaultGround defaultLight defaultCamera>
+            <my-stuff radius="4" count="4"></my-stuff>
         </my-babylon>
         <our-something>
             <!-- a babylon-unaware component -->
@@ -63,6 +59,7 @@
             };
             window.my = { 
                 babylon: document.querySelector("my-babylon"),
+                stuff: document.querySelector("my-stuff"),
             };
             window.V3 = Vector3;
             window.C3 = Color3;
