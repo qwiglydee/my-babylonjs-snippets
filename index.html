@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyBabylon test page</title>
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <style>
+        body {
+            height: var(--vh100, 100vh);
+            overflow: hidden;
+            touch-action: none;
+            padding: 1rem;
+            background-color: var(--bs-gray);
+        }
+
+        our-app {
+            position: relative;
+            display: block;
+            overflow: hidden;
+        }
+
+        our-something {
+            position: absolute;
+            display: block;
+            width: 100%;
+            height: auto;
+            bottom: 0;
+            background-color: var(--bs-light);
+        }
+
+        my-babylon {
+            position: absolute;
+            display: block;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bs-dark);
+        }
+    </style>
+    <script src="src/utils/fullscreen.js"></script>
+    <script type="module" src="src/index.js"></script>
+</head>
+
+<body>
+    <our-app class="h-100 container p-0 border rounded-3">
+        <my-babylon>
+            <!-- shadow dom contains canvas and stuff -->
+            <my-stuff>
+                <!-- a babylon-aware component -->
+            </my-stuff>
+        </my-babylon>
+        <our-something>
+            <!-- a babylon-unaware component -->
+            ...bla bla bla...
+        </our-something>
+    </our-app>
+
+    <script type="module">
+        import { Vector3, Color3 } from "@babylonjs/core/Maths";
+        window.addEventListener('load', function () {
+            window.my = { 
+                app: document.querySelector("my-app"), 
+                babylon: document.querySelector("my-babylon"),
+                something: document.querySelector("my-something"), 
+            };
+            window.V3 = Vector3;
+            window.C3 = Color3;
+        });
+    </script>
+</body>
+
+</html>
