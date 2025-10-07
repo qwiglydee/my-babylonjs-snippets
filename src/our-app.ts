@@ -2,8 +2,6 @@ import { ReactiveElement, type PropertyValues } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { provide } from "@lit/context";
 
-import type { Nullable } from "@babylonjs/core/types";
-
 import { type AppCtx, appCtx, type PickEvent } from "./context";
 import { debug, debugChanges } from "./utils/debug";
 

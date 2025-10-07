@@ -2,6 +2,7 @@ import { provide } from "@lit/context";
 import { css, ReactiveElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
+import { PointerDragBehavior } from "@babylonjs/core/Behaviors/Meshes/pointerDragBehavior";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import type { Camera } from "@babylonjs/core/Cameras/camera";
 import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
@@ -15,12 +16,11 @@ import "@babylonjs/core/Rendering/outlineRenderer";
 import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
 import { Scene, type SceneOptions } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
-import { PointerDragBehavior } from "@babylonjs/core/Behaviors/Meshes/pointerDragBehavior";
 
 import { type BabylonCtx, babylonCtx, type PickDetail } from "./context";
+import { assert } from "./utils/asserts";
 import { debug } from "./utils/debug";
 import { bubbleEvent } from "./utils/events";
-import { assert } from "./utils/asserts";
 
 const ENGOPTIONS: EngineOptions = {
     antialias: true,

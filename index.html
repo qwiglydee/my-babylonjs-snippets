@@ -42,14 +42,14 @@
 </head>
 
 <body>
+    
     <our-app class="h-100 container p-0 border rounded-3">
         <my-babylon defaultEnv defaultGround defaultLight defaultCamera picking dragging>
             <my-stuff radius="4" count="4"></my-stuff>
         </my-babylon>
-        <our-something>
-            <!-- a babylon-unaware component -->
-        </our-something>
+        <our-something></our-something>
     </our-app>
+
     <script type="module">
         import { Vector3, Color3 } from "@babylonjs/core/Maths";
         window.addEventListener('load', function () {

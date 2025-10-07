@@ -9,7 +9,6 @@ import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import type { Nullable } from "@babylonjs/core/types";
 
 import { babylonCtx, type BabylonCtx } from "./context";
-import { debug } from "./utils/debug";
 
 @customElement("my-stuff")
 export class MyStuffElem extends ReactiveElement {
