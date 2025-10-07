@@ -1,0 +1,24 @@
+{
+  "name": "my-babylonjs-snippets",
+  "private": true,
+  "version": "1.0.6",
+  "author": "qwiglydee@gmail.com",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 8000",
+    "build": "tsc && vite build"
+  },
+  "dependencies": {
+    "@babylonjs/core": "^8.0.0",
+    "@babylonjs/gui": "^8.0.0",
+    "@babylonjs/loaders": "^8.0.0",
+    "@lit/context": "^1.1.6",
+    "lit": "^3.3.0"
+  },
+  "devDependencies": {
+    "@lit-labs/rollup-plugin-minify-html-literals": "^0.1.0",
+    "typescript": "^5.9.2",
+    "tslib": "^2.8.1",
+    "vite": "^7.1.0"
+  }
+}
