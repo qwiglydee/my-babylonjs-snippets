@@ -44,9 +44,10 @@
 <body>
     
     <our-app class="h-100 container p-0 border rounded-3">
-        <my-babylon worldSize="32" rightHanded defaultEnv defaultLight defaultCamera picking dragging>
-            <my-ground opacity="0.5" autoSize></my-ground>
-            <my-stuff radius="2" count="1"></my-stuff>
+        <my-babylon worldSize="32" rightHanded defaultLight picking dragging>
+            <my-camera-arc autoSpin autoZoom></my-camera-arc>
+            <my-ground opacity="0.375" autoSize></my-ground>
+            <my-stuff radius="5" count="3"></my-stuff>
             <my-something></my-something>
         </my-babylon>
         <our-status></our-status>
@@ -63,6 +64,7 @@
                 babylon: document.querySelector("my-babylon"),
                 ground: document.querySelector("my-ground"),
                 stuff: document.querySelector("my-stuff"),
+                camera: document.querySelector("my-camera-arc"),
             };
             window.V3 = Vector3;
             window.C3 = Color3;

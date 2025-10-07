@@ -1,6 +1,6 @@
 import { consume } from "@lit/context";
 import { ReactiveElement, type PropertyValues } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 
 import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import { Color3 } from "@babylonjs/core/Maths";
@@ -10,14 +10,19 @@ import type { Nullable } from "@babylonjs/core/types";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
 
 import { babylonCtx, type BabylonCtx } from "./context";
-import { debugChanges } from "./utils/debug";
+import { debug, debugChanges } from "./utils/debug";
+import { assertNonNull } from "./utils/asserts";
 
 const GROUND_TXT = new URL("./assets/ground.png?inline", import.meta.url);
 
 @customElement("my-ground")
 export class MyGroundElem extends ReactiveElement {
     @consume({ context: babylonCtx, subscribe: true })
+    @state()
     ctx: Nullable<BabylonCtx> = null;
+
+    @property({ type: Boolean })
+    autoSize = false;
 
     @property({ type: Number })
     radius: Nullable<number> = null;
@@ -33,17 +38,37 @@ export class MyGroundElem extends ReactiveElement {
     }
 
     override update(changes: PropertyValues) {
-        if (!this.hasUpdated) this.#createStuff();
-        else if (changes.size) this.#adjustStuff(changes);
+        if (!this.hasUpdated) this.#create();
+        else {
+            if (this.autoSize) {
+                if (changes.has("ctx") || changes.has("autoSize")) {
+                    this.#resize(4 * Math.max(this.ctx!.bounds.max.length(), this.ctx!.bounds.min.length()));
+                }
+            } else {
+                if (changes.has("radius")) {
+                    this.#resize(this.radius ? this.radius * 2 : this.ctx!.size);
+                }
+            }
+
+            if (changes.has("opacity")) {
+                this._mtl.opacity = this.opacity;
+            }
+
+            if (changes.has("color")) {
+                this._mtl.lineColor = Color3.FromHexString(this.color);
+            }
+        }
+
         super.update(changes);
     }
 
     _mesh!: Mesh;
     _mtl!: GridMaterial;
 
-    #createStuff() {
-        const scene = this.ctx!.utils.utilityLayerScene;
-        const size = this.radius ? this.radius * 2 : this.ctx!.size;
+    #create() {
+        assertNonNull(this.ctx);
+        const scene = this.ctx.utils.utilityLayerScene;
+        const size = this.radius ? this.radius * 2 : this.ctx.size;
 
         this._mesh = CreateGround("BackgroundGround", { width: 1.0, height: 1.0, subdivisions: 1 }, scene);
         this._mesh.isPickable = false;
@@ -60,23 +85,14 @@ export class MyGroundElem extends ReactiveElement {
         this._mtl.opacityTexture = new Texture(GROUND_TXT.href, scene);
 
         this._mesh.material = this._mtl;
+
+        this.#resize(size);
     }
 
-    #adjustStuff(changes: PropertyValues) {
-        debugChanges(this, "updating", changes);
-        if (changes.has("radius")) {
-            const size = this.radius ? this.radius * 2 : this.ctx!.size;
-            this._mesh.scaling.x = size;
-            this._mesh.scaling.z = size;
-            this._mtl.gridRatio = 1 / size;
-        }
-
-        if (changes.has("opacity")) {
-            this._mtl.opacity = this.opacity;
-        }
-
-        if (changes.has("color")) {
-            this._mtl.lineColor = Color3.FromHexString(this.color);
-        }
+    #resize(size: number) {
+        debug(this, "resizing", { size });
+        this._mesh.scaling.x = size;
+        this._mesh.scaling.z = size;
+        this._mtl.gridRatio = 1 / size;
     }
 }
