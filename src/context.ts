@@ -22,3 +22,10 @@ export interface BabylonCtx {
 }
 
 export const babylonCtx = createContext<Nullable<BabylonCtx>>(Symbol('babylon'));
+
+
+export interface PickDetail {
+    mesh: Nullable<string>;
+    state?: string;
+}
+export type PickEvent = CustomEvent<PickDetail>;

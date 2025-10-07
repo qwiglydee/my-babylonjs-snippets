@@ -44,16 +44,17 @@ export class MyStuffElem extends ReactiveElement {
     }
 
     async #createStuff() {
-        const createItem = (type: number) => {
+        const createItem = (i: number, type: number) => {
+            i = i + 1;
             switch(type) {
                 case 0:
-                    return MeshBuilder.CreateBox("box", { size: this.size }, this.ctx!.scene);
+                    return MeshBuilder.CreateBox(`box.${i}`, { size: this.size }, this.ctx!.scene);
                 case 1:
-                    return MeshBuilder.CreateSphere("ball", { diameter: this.size }, this.ctx!.scene);
+                    return MeshBuilder.CreateSphere(`ball.${i}`, { diameter: this.size }, this.ctx!.scene);
                 case 2:
-                    return MeshBuilder.CreateCylinder("cone", { height: this.size, diameterBottom: this.size, diameterTop: 0 }, this.ctx!.scene);
+                    return MeshBuilder.CreateCylinder(`cone.${i}`, { height: this.size, diameterBottom: this.size, diameterTop: 0 }, this.ctx!.scene);
                 case 3:
-                    return MeshBuilder.CreateIcoSphere("diamond", { radius: 0.5 * this.size, subdivisions: 1 }, this.ctx!.scene);
+                    return MeshBuilder.CreateIcoSphere(`diamond.${i}`, { radius: 0.5 * this.size, subdivisions: 1 }, this.ctx!.scene);
                 default:
                     throw Error();
             }
@@ -63,7 +64,7 @@ export class MyStuffElem extends ReactiveElement {
         let _meshes: Mesh[] = [];
 
         for(let i = 0; i < this.count; i++) {
-            mesh = createItem(i % 4);
+            mesh = createItem(i, i % 4);
             mesh.position = this.#randomLoc();
             _meshes.push(mesh);
         }

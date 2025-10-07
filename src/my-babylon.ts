@@ -1,28 +1,32 @@
-import { css, ReactiveElement, type PropertyValues } from "lit";
-import { customElement, property } from "lit/decorators.js";
 import { provide } from "@lit/context";
+import { css, ReactiveElement } from "lit";
+import { customElement, property } from "lit/decorators.js";
 
-import { Color4, Vector3 } from "@babylonjs/core/Maths";
-import { Engine } from "@babylonjs/core/Engines/engine";
-import { Scene, type SceneOptions } from "@babylonjs/core/scene";
-import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
-import type { EngineOptions } from "@babylonjs/core/Engines/thinEngine";
-import "@babylonjs/core/Helpers/sceneHelpers";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
-
 import type { Camera } from "@babylonjs/core/Cameras/camera";
+import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
+import { Engine } from "@babylonjs/core/Engines/engine";
+import type { EngineOptions } from "@babylonjs/core/Engines/thinEngine";
+import { PointerEventTypes, PointerInfo } from "@babylonjs/core/Events/pointerEvents";
+import "@babylonjs/core/Helpers/sceneHelpers";
+import { Color3, Color4, Vector3 } from "@babylonjs/core/Maths";
+import type { Mesh } from "@babylonjs/core/Meshes/mesh";
+import "@babylonjs/core/Rendering/outlineRenderer";
+import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
+import { Scene, type SceneOptions } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
-
-import { type BabylonCtx, babylonCtx } from "./context";
+import { type BabylonCtx, babylonCtx, type PickDetail } from "./context";
+import { debug } from "./utils/debug";
+import { bubbleEvent } from "./utils/events";
+import { assert } from "./utils/asserts";
 
 const ENGOPTIONS: EngineOptions = {
     antialias: true,
     stencil: false,
     doNotHandleContextLost: true,
-}
+};
 
-const SCNOPTIONS: SceneOptions = {
-}
+const SCNOPTIONS: SceneOptions = {};
 
 /**
  * Babylon-aware component and context
@@ -32,32 +36,35 @@ export class MyBabylonElem extends ReactiveElement {
     @provide({ context: babylonCtx })
     ctx: Nullable<BabylonCtx> = null;
 
-    @property({ type: Number})
+    @property({ type: Number })
     worldSize = 100;
 
-    @property({ type: Boolean})
+    @property({ type: Boolean })
     defaultEnv = false;
 
-    @property({ type: Boolean})
+    @property({ type: Boolean })
     defaultLight = false;
 
-    @property({ type: Boolean})
+    @property({ type: Boolean })
     defaultGround = false;
 
-    @property({ type: Boolean})
+    @property({ type: Boolean })
     defaultCamera = false;
+
+    @property({ type: Boolean })
+    picking = false;
 
     static override styles = css`
         :host {
             display: block;
             background-color: var(--my-background-color, #808080);
-        } 
+        }
 
         canvas {
             width: 100%;
             height: 100%;
         }
-    `
+    `;
 
     canvas: HTMLCanvasElement;
     engine!: Engine;
@@ -72,23 +79,27 @@ export class MyBabylonElem extends ReactiveElement {
 
     constructor() {
         super();
-        this.canvas = this.ownerDocument.createElement('canvas');
-        this.#resizingObs = new ResizeObserver(
-            () => { this.#needresize = true; }
-        );
+        this.canvas = this.ownerDocument.createElement("canvas");
+        this.#resizingObs = new ResizeObserver(() => {
+            this.#needresize = true;
+        });
         this.#visibilityObs = new IntersectionObserver(
             (entries) => {
-                const visible = entries[0].isIntersecting; 
-                if (visible) this.engine.runRenderLoop(this.#render); else this.engine.stopRenderLoop(this.#render);
+                const visible = entries[0].isIntersecting;
+                if (visible) this.engine.runRenderLoop(this.#render);
+                else this.engine.stopRenderLoop(this.#render);
             },
             { threshold: 0.5 }
         );
     }
 
     #render = () => {
-        if (this.#needresize) { this.engine.resize(); this.#needresize = false; }
+        if (this.#needresize) {
+            this.engine.resize();
+            this.#needresize = false;
+        }
         this.scene.render();
-    }
+    };
 
     override connectedCallback(): void {
         super.connectedCallback();
@@ -109,7 +120,7 @@ export class MyBabylonElem extends ReactiveElement {
     async #init() {
         this.engine = new Engine(this.canvas, undefined, ENGOPTIONS);
         this.scene = new Scene(this.engine, SCNOPTIONS);
-        this.scene.clearColor = Color4.FromHexString(getComputedStyle(this).getPropertyValue('--my-background-color'));
+        this.scene.clearColor = Color4.FromHexString(getComputedStyle(this).getPropertyValue("--my-background-color"));
         this.utils = UtilityLayerRenderer.DefaultUtilityLayer;
 
         if (this.defaultEnv) this.scene.createDefaultEnvironment({ skyboxSize: this.worldSize, createGround: this.defaultGround, groundSize: this.worldSize });
@@ -123,8 +134,16 @@ export class MyBabylonElem extends ReactiveElement {
             camera.attachControl();
             camera.useAutoRotationBehavior = true;
         }
-    
+
         this.camera = this.scene.activeCamera;
+
+        if (this.picking) {
+            this.scene.onPointerObservable.add((info: PointerInfo) => {
+                if (info.type == PointerEventTypes.POINTERTAP) {
+                    if (info.pickInfo?.pickedMesh) this.onpick(info.pickInfo); else this.unpick();
+                }
+            });
+        }
 
         await this.scene.whenReadyAsync(true);
 
@@ -133,11 +152,36 @@ export class MyBabylonElem extends ReactiveElement {
             scene: this.scene,
             utils: this.utils,
             camera: this.camera,
-        }
+        };
     }
 
     #dispose() {
         this.scene.dispose();
         this.engine.dispose();
+    }
+
+    _picked: Nullable<Mesh> = null;
+
+
+    #unpick() {
+        if (this._picked) this._picked.renderOutline = false;
+        this._picked = null;
+    }
+
+    onpick(pickinfo: PickingInfo | null) {
+        assert(pickinfo && pickinfo.pickedMesh);
+        this.#unpick();
+        this._picked = pickinfo.pickedMesh as Mesh;
+        this._picked.renderOutline = true;
+        this._picked.outlineColor = Color3.Yellow();
+        this._picked.outlineWidth = 0.02;
+        debug(this, "picked", { mesh: this._picked, point: pickinfo.pickedPoint });
+        bubbleEvent<PickDetail>(this, "babylon.picked", { state: "picked", mesh: this._picked.name });
+    }
+
+    unpick() {
+        this.#unpick();
+        debug(this, "picked", { mesh: this._picked });
+        bubbleEvent<PickDetail>(this, "babylon.picked", { mesh: null });
     }
 }
