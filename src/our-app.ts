@@ -57,5 +57,6 @@ export class OurAppElem extends ReactiveElement {
         const { state, mesh } = e.detail;
         if (!state) this.#updateCtx({status: "..."});
         else if (state == 'picked') this.#updateCtx({status: `Picked: ${mesh}`});
+        else if (state == 'dragging') this.#updateCtx({status: `Dragging: ${mesh}`});
     }
 } 
