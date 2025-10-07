@@ -1,7 +1,7 @@
 # MY BabylonJS snippets
 
 This is my production-like playground to test and experiment with reusable snippets and solutions for Web3D with [BabylonJS](https://www.babylonjs.com/).
-branches and tags
+
 Assumed context:
 
 ```html
