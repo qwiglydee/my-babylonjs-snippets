@@ -1,6 +1,6 @@
 import type { PropertyValues } from "lit";
 
-export function debug(that: HTMLElement, kind: string, data?: any) {
+export function debug(that: HTMLElement, kind: string, data: any = "...") {
     console.debug(`${that.tagName}${that.id ? '#' + that.id : ""} ${kind}:`, data);
 }
 

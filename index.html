@@ -25,7 +25,7 @@
             position: absolute;
             display: block;
             width: 100%;
-            height: auto;
+            min-height: 1rem;
             bottom: 0;
             background-color: var(--bs-light);
         }
@@ -52,17 +52,17 @@
         </my-babylon>
         <our-something>
             <!-- a babylon-unaware component -->
-            ...bla bla bla...
         </our-something>
     </our-app>
-
     <script type="module">
         import { Vector3, Color3 } from "@babylonjs/core/Maths";
         window.addEventListener('load', function () {
+            window.our = { 
+                app: document.querySelector("our-app"), 
+                something: document.querySelector("our-something"), 
+            };
             window.my = { 
-                app: document.querySelector("my-app"), 
                 babylon: document.querySelector("my-babylon"),
-                something: document.querySelector("my-something"), 
             };
             window.V3 = Vector3;
             window.C3 = Color3;
