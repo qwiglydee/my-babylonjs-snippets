@@ -44,9 +44,10 @@
 <body>
     
     <our-app class="h-100 container p-0 border rounded-3">
-        <my-babylon worldSize="32" rightHanded defaultLight picking dragging>
+        <my-babylon worldSize="32" rightHanded picking dragging>
+            <my-environ sky skyIntens="0.1"></my-environ>
+            <my-ground autoSize></my-ground>
             <my-camera-arc autoSpin autoZoom></my-camera-arc>
-            <my-ground opacity="0.375" autoSize></my-ground>
             <my-stuff radius="5" count="3"></my-stuff>
             <my-something></my-something>
         </my-babylon>
@@ -62,6 +63,7 @@
             };
             window.my = { 
                 babylon: document.querySelector("my-babylon"),
+                environ: document.querySelector("my-environ"), 
                 ground: document.querySelector("my-ground"),
                 stuff: document.querySelector("my-stuff"),
                 camera: document.querySelector("my-camera-arc"),

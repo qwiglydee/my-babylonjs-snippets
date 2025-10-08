@@ -12,7 +12,7 @@
     "@babylonjs/core": "^8.0.0",
     "@babylonjs/gui": "^8.0.0",
     "@babylonjs/loaders": "^8.0.0",
-    "@babylonjs/materials": "^8.30.4",
+    "@babylonjs/materials": "^8.0.0",
     "@lit/context": "^1.1.6",
     "lit": "^3.3.0"
   },

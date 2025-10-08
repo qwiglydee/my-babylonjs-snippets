@@ -76,7 +76,6 @@ export class MyArcCameraElem extends ReactiveElement {
         assertNonNull(this.ctx);
         const distance = this._camera._calculateLowerRadiusFromModelBoundingSphere(this.ctx.bounds.min, this.ctx.bounds.max, this.zoomFactor);
         this._camera.radius = distance;
-        this._camera.upperRadiusLimit = distance * 1.25;
         this._camera.focusOn({ ...this.ctx.bounds, distance }, true);
     }
 }

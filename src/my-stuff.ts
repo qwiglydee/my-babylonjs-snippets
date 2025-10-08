@@ -2,7 +2,7 @@ import { consume } from "@lit/context";
 import { ReactiveElement, type PropertyValues } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
-import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
+import { PBRMetallicRoughnessMaterial } from "@babylonjs/core/Materials/PBR/pbrMetallicRoughnessMaterial";
 import { Vector3 as V3 } from "@babylonjs/core/Maths";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
@@ -43,8 +43,10 @@ export class MyStuffElem extends ReactiveElement {
         return new V3(snap(rndc()), 0.5 * this.size, snap(rndc()));
     }
 
+    _defaultMat!: PBRMetallicRoughnessMaterial;
+
     _createItem = (type: number, idx: string) => {
-        let mesh;
+        let mesh: Mesh;
         switch(type) {
             case 0:
                 mesh = MeshBuilder.CreateBox(`box.${idx}`, { size: this.size }, this.ctx!.scene);
@@ -62,11 +64,18 @@ export class MyStuffElem extends ReactiveElement {
                 throw Error();
         }
         mesh.position = this.#randomLoc();
+        mesh.material = this._defaultMat;
         return mesh;
     }
 
     async #createStuff() {
         debug(this, "creating", { count: this.count });
+
+        this._defaultMat = new PBRMetallicRoughnessMaterial("default", this.ctx!.scene);
+        this._defaultMat.metallic = 0;
+        this._defaultMat.roughness = 0.5;
+
+
         for(let i = 0; i < this.count; i++) this._createItem(i % 4, (i + 1).toString().padStart(3, '0'));
     }
 }

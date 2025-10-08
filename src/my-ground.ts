@@ -33,6 +33,9 @@ export class MyGroundElem extends ReactiveElement {
     @property({ type: Number })
     opacity = 0.5;
 
+    @property({ type: Number })
+    opacity2 = 0.75;
+
     protected override shouldUpdate(_changes: PropertyValues): boolean {
         return this.ctx != null;
     }
@@ -78,7 +81,7 @@ export class MyGroundElem extends ReactiveElement {
         this._mtl = new GridMaterial("BackgroundGround", scene);
         this._mtl.lineColor = Color3.FromHexString(this.color);
         this._mtl.majorUnitFrequency = 8;
-        this._mtl.minorUnitVisibility = 0.825;
+        this._mtl.minorUnitVisibility = this.opacity2;
         this._mtl.backFaceCulling = false;
         this._mtl.gridRatio = 1 / size;
         this._mtl.opacity = this.opacity;
