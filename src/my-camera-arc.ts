@@ -72,11 +72,13 @@ export class MyArcCameraElem extends ReactiveElement {
         this._camera.useAutoRotationBehavior = this.autoSpin;
 
         this.ctx.scene.activeCamera = this._camera;
+        this.ctx.scene.onActiveCameraChanged.add(() => this._camera.autoRotationBehavior?.resetLastInteractionTime());
     }
 
     reframe() {
         debug(this, "reframing", this.ctx?.bounds);
         assertNonNull(this.ctx);
+        this._camera.autoRotationBehavior?.resetLastInteractionTime();
         const distance = this._camera._calculateLowerRadiusFromModelBoundingSphere(this.ctx.bounds.min, this.ctx.bounds.max, this.zoomFactor);
         this._camera.radius = distance;
         this._camera.focusOn({ ...this.ctx.bounds, distance }, true);

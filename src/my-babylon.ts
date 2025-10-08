@@ -21,6 +21,7 @@ import { babylonCtx, type BabylonCtx, type PickDetail } from "./context";
 import { assert } from "./utils/asserts";
 import { debug } from "./utils/debug";
 import { bubbleEvent } from "./utils/events";
+import type { Camera } from "@babylonjs/core/Cameras/camera";
 
 const ENGOPTIONS: EngineOptions = {
     antialias: true,
@@ -82,15 +83,32 @@ export class MyBabylonElem extends ReactiveElement {
         });
         this.#visibilityObs = new IntersectionObserver(
             (entries) => {
-                const visible = entries[0].isIntersecting;
-                if (visible) this.engine.runRenderLoop(this.#render);
-                else this.engine.stopRenderLoop(this.#render);
+                if (entries[0].isIntersecting) this.#startRendering(); else this.#stopRendering();
             },
             { threshold: 0.5 }
         );
     }
 
-    #render = () => {
+    __camera_bak: Nullable<Camera> = null;
+
+    #startRendering() {
+        if (this.__camera_bak) {
+            this.scene.activeCamera = this.__camera_bak;
+            this.scene.activeCamera?.attachControl();
+        }
+        this.engine.runRenderLoop(this.#rendering);
+    }
+
+    #stopRendering() {
+        this.engine.stopRenderLoop(this.#rendering);
+        if (this.scene.activeCamera) {
+            this.scene.activeCamera?.detachControl();
+            this.__camera_bak = this.scene.activeCamera;
+            this.scene.activeCamera = null;
+        }
+    }
+
+    #rendering = () => {
         if (this.#needresize) {
             this.engine.resize();
             this.#needresize = false;
