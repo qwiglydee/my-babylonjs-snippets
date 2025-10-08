@@ -2,7 +2,6 @@ import { createContext } from "@lit/context";
 
 import type { Scene } from "@babylonjs/core/scene";
 import type { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
-import type { Camera } from "@babylonjs/core/Cameras/camera";
 import type { Nullable } from "@babylonjs/core/types";
 import type { Vector3 } from "@babylonjs/core/Maths";
 

@@ -3,20 +3,17 @@ import { ReactiveElement, type PropertyValues } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 import "@babylonjs/core/Helpers/sceneHelpers";
-import { BackgroundMaterial } from "@babylonjs/core/Materials/Background/backgroundMaterial";
-import { CubeTexture } from "@babylonjs/core/Materials/Textures/cubeTexture";
-import { Mesh } from "@babylonjs/core/Meshes/mesh";
-import type { Nullable } from "@babylonjs/core/types";
-import { babylonCtx, type BabylonCtx } from "./context";
-import { debug } from "./utils/debug";
-import { Tags } from "@babylonjs/core/Misc/tags";
-import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
 import { PBRMaterial } from "@babylonjs/core/Materials/PBR/pbrMaterial";
+import { CubeTexture } from "@babylonjs/core/Materials/Textures/cubeTexture";
 import { Texture } from "@babylonjs/core/Materials/Textures/texture";
+import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import { Tags } from "@babylonjs/core/Misc/tags";
+import type { Nullable } from "@babylonjs/core/types";
 
+import { babylonCtx, type BabylonCtx } from "./context";
 
 const DEFAULT_ENV = new URL("./assets/studio.env?inline", import.meta.url);
-
 
 @customElement("my-environ")
 export class MyEnvironElem extends ReactiveElement {
@@ -45,9 +42,9 @@ export class MyEnvironElem extends ReactiveElement {
     override update(changes: PropertyValues) {
         if (!this.hasUpdated) this.#create();
         else {
-            if (changes.has('envIntens') && this._envTxt) this._envTxt.level = this.envIntens;
-            if (changes.has('skyIntens') && this._skyTxt) this._skyTxt.level = this.skyIntens;
-            if (changes.has('skyBlur') && this._skyMat) this._skyMat.microSurface = 1 - this.skyBlur;
+            if (changes.has("envIntens") && this._envTxt) this._envTxt.level = this.envIntens;
+            if (changes.has("skyIntens") && this._skyTxt) this._skyTxt.level = this.skyIntens;
+            if (changes.has("skyBlur") && this._skyMat) this._skyMat.microSurface = 1 - this.skyBlur;
         }
         // TODO: reloading textures on the fly maybe
         super.update(changes);
@@ -80,17 +77,16 @@ export class MyEnvironElem extends ReactiveElement {
         this._skyTxt.level = this.skyIntens;
         this._skyTxt.coordinatesMode = Texture.SKYBOX_MODE;
 
-        this._skyMat = new PBRMaterial("SkyBox", scene) 
+        this._skyMat = new PBRMaterial("(SkyBox)", scene);
         this._skyMat.disableLighting = true;
         this._skyMat.backFaceCulling = false;
         this._skyMat.reflectionTexture = this._skyTxt;
         this._skyMat.microSurface = 1.0 - this.skyBlur;
-    
-        this._skyBox = CreateBox("BackgroundSky", { size: this.ctx!.size, sideOrientation: Mesh.BACKSIDE }, scene);
+
+        this._skyBox = CreateBox("(SkyBox)", { size: this.ctx!.size, sideOrientation: Mesh.BACKSIDE }, scene);
+        Tags.AddTagsTo(this._skyBox, "scenery");
         this._skyBox.material = this._skyMat;
         this._skyBox.infiniteDistance = true;
         this._skyBox.ignoreCameraMaxZ = true;
-
-        Tags.AddTagsTo(this._skyBox, "default");
     }
 }

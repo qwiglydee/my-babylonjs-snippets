@@ -2,13 +2,15 @@ import { consume } from "@lit/context";
 import { ReactiveElement, type PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
-import { babylonCtx, type BabylonCtx } from "./context";
-import { debug, debugChanges } from "./utils/debug";
-import type { Nullable } from "@babylonjs/core/types";
-import { assertNonNull } from "./utils/asserts";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
-import { Tools } from "@babylonjs/core/Misc/tools";
 import { Vector3 } from "@babylonjs/core/Maths";
+import { Tools } from "@babylonjs/core/Misc/tools";
+import type { Nullable } from "@babylonjs/core/types";
+
+import { babylonCtx, type BabylonCtx } from "./context";
+import { assertNonNull } from "./utils/asserts";
+import { debug } from "./utils/debug";
+import { Tags } from "@babylonjs/core/Misc/tags";
 
 @customElement("my-camera-arc")
 export class MyArcCameraElem extends ReactiveElement {
@@ -19,8 +21,11 @@ export class MyArcCameraElem extends ReactiveElement {
     @property({ type: Boolean })
     autoZoom = false;
 
+    @property({ type: Boolean })
+    autoSpin = false;
+
     @property({ type: Number })
-    zoomFactor = 0.5;
+    zoomFactor = 1.0;
 
     @property({ type: Number })
     radius: Nullable<number> = null;
@@ -30,9 +35,6 @@ export class MyArcCameraElem extends ReactiveElement {
 
     @property({ type: Number })
     beta: number = 45;
-
-    @property({ type: Boolean })
-    autoSpin = false;
 
     protected override shouldUpdate(_changes: PropertyValues): boolean {
         return this.ctx != null;
@@ -57,7 +59,8 @@ export class MyArcCameraElem extends ReactiveElement {
         assertNonNull(this.ctx);
         const radius = this.radius ?? 0.5 * this.ctx.size;
 
-        this._camera = new ArcRotateCamera("#camera", Tools.ToRadians(this.alpha), Tools.ToRadians(this.alpha), radius, Vector3.Zero(), this.ctx.scene);
+        this._camera = new ArcRotateCamera("(Camera)", Tools.ToRadians(this.alpha), Tools.ToRadians(this.alpha), radius, Vector3.Zero(), this.ctx.scene);
+        Tags.AddTagsTo(this._camera, "scenery");
         this._camera.minZ = 0.001;
         this._camera.maxZ = 1000;
         this._camera.lowerRadiusLimit = 1;

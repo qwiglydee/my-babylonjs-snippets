@@ -3,21 +3,19 @@ import { css, ReactiveElement, type PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
 import { PointerDragBehavior } from "@babylonjs/core/Behaviors/Meshes/pointerDragBehavior";
-import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
-import type { Camera } from "@babylonjs/core/Cameras/camera";
 import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
 import { AxesViewer } from "@babylonjs/core/Debug/axesViewer";
 import { Engine } from "@babylonjs/core/Engines/engine";
 import type { EngineOptions } from "@babylonjs/core/Engines/thinEngine";
 import { PointerEventTypes, PointerInfo } from "@babylonjs/core/Events/pointerEvents";
-import "@babylonjs/core/Helpers/sceneHelpers";
 import { Color3, Color4, Vector3 } from "@babylonjs/core/Maths";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { Tags } from "@babylonjs/core/Misc/tags";
-import "@babylonjs/core/Rendering/outlineRenderer";
 import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
 import { Scene, type SceneOptions } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
+
+import "@babylonjs/core/Rendering/outlineRenderer";
 
 import { babylonCtx, type BabylonCtx, type PickDetail } from "./context";
 import { assert } from "./utils/asserts";
@@ -47,18 +45,6 @@ export class MyBabylonElem extends ReactiveElement {
     worldSize = 100;
 
     @property({ type: Boolean })
-    defaultEnv = false;
-
-    @property({ type: Boolean })
-    defaultLight = false;
-
-    @property({ type: Boolean })
-    defaultGround = false;
-
-    @property({ type: Boolean })
-    defaultCamera = false;
-
-    @property({ type: Boolean })
     picking = false;
 
     @property({ type: Boolean })
@@ -80,7 +66,6 @@ export class MyBabylonElem extends ReactiveElement {
     engine!: Engine;
 
     scene!: Scene;
-    camera: Nullable<Camera> = null;
     utils!: UtilityLayerRenderer;
 
     #dragBeh: Nullable<PointerDragBehavior> = null;
@@ -129,7 +114,9 @@ export class MyBabylonElem extends ReactiveElement {
         super.disconnectedCallback();
     }
 
-    getMeshes() { return this.scene.getMeshesByTags("!default"); }
+    getModel() {
+        return this.scene.getMeshesByTags("!scenery");
+    }
 
     #init() {
         debug(this, "initializing");
@@ -139,21 +126,7 @@ export class MyBabylonElem extends ReactiveElement {
         this.scene.clearColor = Color4.FromHexString(getComputedStyle(this).getPropertyValue("--my-background-color"));
         this.utils = UtilityLayerRenderer.DefaultUtilityLayer;
 
-        if (this.defaultEnv) this.scene.createDefaultEnvironment({ skyboxSize: this.worldSize, createGround: this.defaultGround, groundSize: this.worldSize });
-        if (this.defaultLight) this.scene.createDefaultLight(true);
-        if (this.defaultCamera) {
-            let camera = new ArcRotateCamera("DefaultCamera", 0.25 * Math.PI, 0.25 * Math.PI, this.worldSize * 0.5, Vector3.Zero(), this.scene, true);
-            camera.lowerRadiusLimit = 1;
-            camera.upperRadiusLimit = 0.5 * this.worldSize;
-            camera.maxZ = 10000;
-            camera.minZ = 0.001;
-            camera.attachControl();
-            camera.useAutoRotationBehavior = true;
-        }
-
-        this.scene.getNodes().forEach(n => Tags.AddTagsTo(n, "default"))
-
-        this.camera = this.scene.activeCamera;
+        this.scene.getNodes().forEach((n) => Tags.AddTagsTo(n, "default"));
 
         if (this.picking) {
             this.scene.onPointerObservable.add((info: PointerInfo) => {
@@ -190,10 +163,9 @@ export class MyBabylonElem extends ReactiveElement {
     }
 
     override update(changes: PropertyValues) {
-        if(changes.has('_ctx_dirty')) this.#refreshCtx();
+        if (changes.has("_ctx_dirty")) this.#refreshCtx();
         super.update(changes);
     }
-
 
     @state()
     _ctx_dirty = true;
@@ -206,7 +178,7 @@ export class MyBabylonElem extends ReactiveElement {
     async #refreshCtx() {
         if (!this._ctx_dirty) return;
         await this.scene.whenReadyAsync(true);
-        const models = this.getMeshes();
+        const models = this.getModel();
         this.ctx = {
             size: this.worldSize,
             scene: this.scene,
@@ -217,7 +189,6 @@ export class MyBabylonElem extends ReactiveElement {
         this._ctx_dirty = false;
         debug(this, `CTX == (${this.ctx.count})`, this.ctx);
     }
-
 
     _picked: Nullable<Mesh> = null;
 

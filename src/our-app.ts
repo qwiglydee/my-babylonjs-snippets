@@ -3,7 +3,7 @@ import { customElement, property } from "lit/decorators.js";
 import { provide } from "@lit/context";
 
 import { type AppCtx, appCtx, type PickEvent } from "./context";
-import { debug, debugChanges } from "./utils/debug";
+import { debugChanges } from "./utils/debug";
 
 /**
  * Babylon-unaware web app
@@ -23,7 +23,6 @@ export class OurAppElem extends ReactiveElement {
 
     constructor() {
         super();
-        // add event listeners...
         this.addEventListener('babylon.picked', this.onbabylonpick as EventListener);
     }
 
