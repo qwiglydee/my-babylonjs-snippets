@@ -19,7 +19,6 @@ export interface BabylonCtx {
     size: number;
     scene: Scene;
     utils: UtilityLayerRenderer;
-    count: number;
     bounds: { min: Vector3, max: Vector3 }
 }
 

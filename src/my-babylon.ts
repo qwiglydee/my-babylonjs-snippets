@@ -199,16 +199,14 @@ export class MyBabylonElem extends ReactiveElement {
     async #refreshCtx() {
         if (!this._ctx_dirty) return;
         await this.scene.whenReadyAsync(true);
-        const models = this.getModel();
         this.ctx = {
             size: this.worldSize,
             scene: this.scene,
             utils: this.utils,
-            bounds: Mesh.MinMax(models),
-            count: models.length,
+            bounds: this.scene.getWorldExtends((m) => Tags.MatchesQuery(m, "!scenery")),
         };
         this._ctx_dirty = false;
-        debug(this, `CTX == (${this.ctx.count})`, this.ctx);
+        debug(this, `CTX ==`, this.ctx);
         bubbleEvent(this, "babylon.updated", {});
     }
 
