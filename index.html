@@ -55,23 +55,33 @@
         <our-status></our-status>
     </our-app>
 
+    <script>
+        var our = { 
+            app: document.querySelector("our-app"), 
+            something: document.querySelector("our-something"), 
+        };
+        var my = { 
+            babylon: document.querySelector("my-babylon"),
+            environ: document.querySelector("my-environ"), 
+            ground: document.querySelector("my-ground"),
+            stuff: document.querySelector("my-stuff"),
+            camera: document.querySelector("my-camera-arc"),
+        };
+
+        my.babylon.addEventListener('babylon.picked', function(e) {
+            console.debug(e.type, e.detail);
+        });
+
+        my.babylon.addEventListener('babylon.updated', function(e) {
+            console.debug(e.type, e.detail);
+        })
+    </script>
+
+
     <script type="module">
         import { Vector3, Color3 } from "@babylonjs/core/Maths";
-        window.addEventListener('load', function () {
-            window.our = { 
-                app: document.querySelector("our-app"), 
-                something: document.querySelector("our-something"), 
-            };
-            window.my = { 
-                babylon: document.querySelector("my-babylon"),
-                environ: document.querySelector("my-environ"), 
-                ground: document.querySelector("my-ground"),
-                stuff: document.querySelector("my-stuff"),
-                camera: document.querySelector("my-camera-arc"),
-            };
-            window.V3 = Vector3;
-            window.C3 = Color3;
-        });
+        window.V3 = Vector3;
+        window.C3 = Color3;
     </script>
 </body>
 

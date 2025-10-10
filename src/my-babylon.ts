@@ -17,11 +17,11 @@ import type { Nullable } from "@babylonjs/core/types";
 
 import "@babylonjs/core/Rendering/outlineRenderer";
 
-import { babylonCtx, type BabylonCtx, type PickDetail } from "./context";
-import { assert } from "./utils/asserts";
+import type { Camera } from "@babylonjs/core/Cameras/camera";
+import { babylonCtx, pickCtx, type BabylonCtx, type PickDetail } from "./context";
+import { assert, assertNonNull } from "./utils/asserts";
 import { debug } from "./utils/debug";
 import { bubbleEvent } from "./utils/events";
-import type { Camera } from "@babylonjs/core/Cameras/camera";
 
 const ENGOPTIONS: EngineOptions = {
     antialias: true,
@@ -38,6 +38,9 @@ const SCNOPTIONS: SceneOptions = {};
 export class MyBabylonElem extends ReactiveElement {
     @provide({ context: babylonCtx })
     ctx: Nullable<BabylonCtx> = null;
+
+    @provide({ context: pickCtx })
+    pick: Nullable<PickingInfo> = null;
 
     @property({ type: Boolean })
     rightHanded = false;
@@ -206,32 +209,31 @@ export class MyBabylonElem extends ReactiveElement {
         };
         this._ctx_dirty = false;
         debug(this, `CTX == (${this.ctx.count})`, this.ctx);
+        bubbleEvent(this, "babylon.updated", {});
     }
-
-    _picked: Nullable<Mesh> = null;
 
     #unpick() {
-        if (this._picked) this._picked.renderOutline = false;
+        if (this.pick?.pickedMesh) this.pick.pickedMesh.renderOutline = false;
         if (this.#dragBeh) this.#dragBeh.detach();
-        this._picked = null;
     }
 
-    onpick(pickinfo: PickingInfo | null) {
-        assert(pickinfo && pickinfo.pickedMesh);
+    onpick(pickinfo: PickingInfo) {
         this.#unpick();
-        this._picked = pickinfo.pickedMesh as Mesh;
-        this._picked.renderOutline = true;
-        this._picked.outlineColor = Color3.Yellow();
-        this._picked.outlineWidth = 0.05;
+        this.pick = pickinfo;
+        assertNonNull(this.pick.pickedMesh);
+        debug(this, "picked", this.pick);
+        this.pick.pickedMesh.renderOutline = true;
+        this.pick.pickedMesh.outlineColor = Color3.Yellow();
+        this.pick.pickedMesh.outlineWidth = 0.05;
 
-        if (this.#dragBeh) this.#dragBeh.attach(this._picked);
-        debug(this, "picked", { mesh: this._picked, point: pickinfo.pickedPoint });
-        bubbleEvent<PickDetail>(this, "babylon.picked", { state: "picked", mesh: this._picked.name });
+        if (this.#dragBeh) this.#dragBeh.attach(this.pick.pickedMesh);
+        bubbleEvent<PickDetail>(this, "babylon.picked", { state: "picked", mesh: this.pick.pickedMesh.name });
     }
 
     unpick() {
-        debug(this, "unpicked", { mesh: this._picked });
+        debug(this, "unpicked", this.pick);
         this.#unpick();
+        this.pick = null;
         bubbleEvent<PickDetail>(this, "babylon.picked", { mesh: null });
     }
 
@@ -242,6 +244,7 @@ export class MyBabylonElem extends ReactiveElement {
 
     ondropped(mesh: Mesh) {
         debug(this, "dropped", { mesh });
+        bubbleEvent<PickDetail>(this, "babylon.picked", { state: "dropped", mesh: mesh.name });
         this.#unpick();
         bubbleEvent<PickDetail>(this, "babylon.picked", { mesh: null });
     }

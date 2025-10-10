@@ -4,6 +4,7 @@ import type { Scene } from "@babylonjs/core/scene";
 import type { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
 import type { Nullable } from "@babylonjs/core/types";
 import type { Vector3 } from "@babylonjs/core/Maths";
+import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
 
 export interface AppCtx {
     status: string;
@@ -24,6 +25,7 @@ export interface BabylonCtx {
 
 export const babylonCtx = createContext<Nullable<BabylonCtx>>(Symbol('babylon'));
 
+export const pickCtx = createContext<Nullable<PickingInfo>>(Symbol('babylo.pick'))
 
 export interface PickDetail {
     mesh: Nullable<string>;
