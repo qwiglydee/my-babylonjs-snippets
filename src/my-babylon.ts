@@ -3,6 +3,7 @@ import { css, ReactiveElement, type PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
 import { PointerDragBehavior } from "@babylonjs/core/Behaviors/Meshes/pointerDragBehavior";
+import type { Camera } from "@babylonjs/core/Cameras/camera";
 import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
 import { AxesViewer } from "@babylonjs/core/Debug/axesViewer";
 import { Engine } from "@babylonjs/core/Engines/engine";
@@ -14,18 +15,17 @@ import { Tags } from "@babylonjs/core/Misc/tags";
 import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
 import { Scene, type SceneOptions } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
+import { HighlightLayer } from "@babylonjs/core/Layers/highlightLayer";
+import "@babylonjs/core/Layers/effectLayerSceneComponent";
 
-import "@babylonjs/core/Rendering/outlineRenderer";
-
-import type { Camera } from "@babylonjs/core/Cameras/camera";
 import { babylonCtx, pickCtx, type BabylonCtx, type PickDetail } from "./context";
-import { assert, assertNonNull } from "./utils/asserts";
+import { assertNonNull } from "./utils/asserts";
 import { debug } from "./utils/debug";
 import { bubbleEvent } from "./utils/events";
 
 const ENGOPTIONS: EngineOptions = {
     antialias: true,
-    stencil: false,
+    stencil: true,
     doNotHandleContextLost: true,
 };
 
@@ -54,6 +54,9 @@ export class MyBabylonElem extends ReactiveElement {
     @property({ type: Boolean })
     dragging = false;
 
+    @property({ type: Boolean })
+    highlighting = false;
+
     static override styles = css`
         :host {
             display: block;
@@ -72,8 +75,6 @@ export class MyBabylonElem extends ReactiveElement {
     scene!: Scene;
     utils!: UtilityLayerRenderer;
 
-    #dragBeh: Nullable<PointerDragBehavior> = null;
-
     #needresize = true;
     #resizingObs!: ResizeObserver;
     #visibilityObs!: IntersectionObserver;
@@ -86,7 +87,8 @@ export class MyBabylonElem extends ReactiveElement {
         });
         this.#visibilityObs = new IntersectionObserver(
             (entries) => {
-                if (entries[0].isIntersecting) this.#startRendering(); else this.#stopRendering();
+                if (entries[0].isIntersecting) this.#startRendering();
+                else this.#stopRendering();
             },
             { threshold: 0.5 }
         );
@@ -112,6 +114,7 @@ export class MyBabylonElem extends ReactiveElement {
     }
 
     #rendering = () => {
+        if (!this.scene.activeCamera) return;
         if (this.#needresize) {
             this.engine.resize();
             this.#needresize = false;
@@ -135,10 +138,6 @@ export class MyBabylonElem extends ReactiveElement {
         super.disconnectedCallback();
     }
 
-    getModel() {
-        return this.scene.getMeshesByTags("!scenery");
-    }
-
     #init() {
         debug(this, "initializing");
         this.engine = new Engine(this.canvas, undefined, ENGOPTIONS);
@@ -149,26 +148,9 @@ export class MyBabylonElem extends ReactiveElement {
 
         this.scene.getNodes().forEach((n) => Tags.AddTagsTo(n, "default"));
 
-        if (this.picking) {
-            this.scene.onPointerObservable.add((info: PointerInfo) => {
-                if (info.type == PointerEventTypes.POINTERTAP) {
-                    if (info.pickInfo?.pickedMesh) this.onpick(info.pickInfo);
-                    else this.unpick();
-                }
-            });
-
-            if (this.dragging) {
-                this.#dragBeh = new PointerDragBehavior({ dragPlaneNormal: Vector3.Up() });
-                this.#dragBeh.dragDeltaRatio = 0.2;
-
-                this.#dragBeh.onDragStartObservable.add(() => {
-                    this.ongrabbed(this.#dragBeh!.attachedNode as Mesh);
-                });
-                this.#dragBeh.onDragEndObservable.add(() => {
-                    this.ondropped(this.#dragBeh!.attachedNode as Mesh);
-                });
-            }
-        }
+        if (this.picking) this.#initPicking();
+        if (this.dragging) this.#initDragging();
+        if (this.highlighting) this.#initHighlighting();
 
         new AxesViewer(this.utils.utilityLayerScene);
 
@@ -176,6 +158,30 @@ export class MyBabylonElem extends ReactiveElement {
         this.scene.onNewMeshAddedObservable.add(() => this.#invalidateCtx());
         this.scene.onMeshRemovedObservable.add(() => this.#invalidateCtx());
         this.#refreshCtx();
+    }
+
+    #initPicking() {
+        this.scene.onPointerObservable.add((info: PointerInfo) => {
+            if (info.type == PointerEventTypes.POINTERTAP) {
+                if (info.pickInfo?.pickedMesh) this.onpick(info.pickInfo);
+                else this.unpick();
+            }
+        });
+    }
+
+    _dragBhv: Nullable<PointerDragBehavior> = null;
+    #initDragging() {
+        this._dragBhv = new PointerDragBehavior({ dragPlaneNormal: Vector3.Up() });
+        this._dragBhv.onDragStartObservable.add(() => this.ongrabbed(this._dragBhv!.attachedNode as Mesh));
+        this._dragBhv.onDragEndObservable.add(() => this.ondropped(this._dragBhv!.attachedNode as Mesh));
+    }
+
+
+    _highlighter: Nullable<HighlightLayer> = null; 
+    _highloghtColor = Color3.Yellow();
+    
+    #initHighlighting() {
+        this._highlighter = new HighlightLayer("highlight", this.scene);
     }
 
     #dispose() {
@@ -210,40 +216,46 @@ export class MyBabylonElem extends ReactiveElement {
         bubbleEvent(this, "babylon.updated", {});
     }
 
-    #unpick() {
-        if (this.pick?.pickedMesh) this.pick.pickedMesh.renderOutline = false;
-        if (this.#dragBeh) this.#dragBeh.detach();
+
+    #select(mesh: Mesh) {
+        if (this._dragBhv) this._dragBhv.attach(mesh);
+        if (this._highlighter) this._highlighter.addMesh(mesh, this._highloghtColor);
+    } 
+
+    #deselect(mesh: Mesh) {
+        if (this._dragBhv) this._dragBhv.detach();
+        if (this._highlighter) this._highlighter.removeMesh(mesh);
     }
 
-    onpick(pickinfo: PickingInfo) {
-        this.#unpick();
-        this.pick = pickinfo;
-        assertNonNull(this.pick.pickedMesh);
-        debug(this, "picked", this.pick);
-        this.pick.pickedMesh.renderOutline = true;
-        this.pick.pickedMesh.outlineColor = Color3.Yellow();
-        this.pick.pickedMesh.outlineWidth = 0.05;
+    _selected: Nullable<Mesh> = null;
 
-        if (this.#dragBeh) this.#dragBeh.attach(this.pick.pickedMesh);
-        bubbleEvent<PickDetail>(this, "babylon.picked", { state: "picked", mesh: this.pick.pickedMesh.name });
+    onpick(pickinfo: PickingInfo) {
+        this.pick = pickinfo;
+        if (this._selected === this.pick.pickedMesh) return;
+        assertNonNull(this.pick.pickedMesh);
+             
+        if (this._selected) this.#deselect(this._selected);
+        this._selected = this.pick.pickedMesh as Mesh; 
+        this.#select(this._selected);
+
+        bubbleEvent<PickDetail>(this, "babylon.picked", { state: "picked", mesh: this._selected.id });
     }
 
     unpick() {
-        debug(this, "unpicked", this.pick);
-        this.#unpick();
+        if (this._selected) this.#deselect(this._selected);
+        this._selected = null;
         this.pick = null;
         bubbleEvent<PickDetail>(this, "babylon.picked", { mesh: null });
     }
 
     ongrabbed(mesh: Mesh) {
-        debug(this, "grabbed", { mesh });
-        bubbleEvent<PickDetail>(this, "babylon.picked", { state: "dragging", mesh: mesh.name });
+        assertNonNull(mesh);
+        bubbleEvent<PickDetail>(this, "babylon.grabbed", { state: "dragging", mesh: mesh.id });
     }
 
     ondropped(mesh: Mesh) {
-        debug(this, "dropped", { mesh });
-        bubbleEvent<PickDetail>(this, "babylon.picked", { state: "dropped", mesh: mesh.name });
-        this.#unpick();
-        bubbleEvent<PickDetail>(this, "babylon.picked", { mesh: null });
+        assertNonNull(mesh);
+        bubbleEvent<PickDetail>(this, "babylon.dropped", { state: "dropped", mesh: mesh.id });
+        if (mesh === this._selected) this.unpick();
     }
 }

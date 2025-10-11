@@ -84,6 +84,7 @@ export class MyEnvironElem extends ReactiveElement {
 
         this._skyBox = CreateBox("(SkyBox)", { size: this.ctx!.size, sideOrientation: Mesh.BACKSIDE }, scene);
         Tags.AddTagsTo(this._skyBox, "scenery");
+        this._skyBox.isPickable = false;
         this._skyBox.material = this._skyMat;
         this._skyBox.infiniteDistance = true;
         this._skyBox.ignoreCameraMaxZ = true;

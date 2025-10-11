@@ -22,7 +22,7 @@ export class MySomethingElem extends ReactiveElement {
 
     override update(changes: PropertyValues) {
         debugChanges(this, "updating", changes);
-        debug(this, "updating ctx", { ctx: this.ctx, pick: this.pick });
+        debug(this, "contexts", { ctx: this.ctx, pick: this.pick });
         super.update(changes);
     }
 }

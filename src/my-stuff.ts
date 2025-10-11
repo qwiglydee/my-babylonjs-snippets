@@ -10,6 +10,7 @@ import type { Nullable } from "@babylonjs/core/types";
 
 import { babylonCtx, type BabylonCtx } from "./context";
 import { debug } from "./utils/debug";
+import { assertNonNull } from "./utils/asserts";
 
 @customElement("my-stuff")
 export class MyStuffElem extends ReactiveElement {
@@ -45,20 +46,28 @@ export class MyStuffElem extends ReactiveElement {
 
     _defaultMat!: PBRMetallicRoughnessMaterial;
 
-    _createItem = (type: number, idx: string) => {
+    createItem() {
+        assertNonNull(this.ctx?.scene);
+        this._createItem(Math.floor(Math.random() * 3));
+    }
+
+    _createItem = (type: number) => {
+        const scene = this.ctx!.scene;
+
+        let idx = (1 + (this.ctx!.scene.meshes.length ?? 0)).toString().padStart(3, '0');
         let mesh: Mesh;
         switch(type) {
             case 0:
-                mesh = MeshBuilder.CreateBox(`box.${idx}`, { size: this.size }, this.ctx!.scene);
+                mesh = MeshBuilder.CreateBox(`box.${idx}`, { size: this.size }, scene);
                 break;
             case 1:
-                mesh = MeshBuilder.CreateSphere(`ball.${idx}`, { diameter: this.size }, this.ctx!.scene);
+                mesh = MeshBuilder.CreateSphere(`ball.${idx}`, { diameter: this.size }, scene);
                 break;
             case 2:
-                mesh = MeshBuilder.CreateCylinder(`cone.${idx}`, { height: this.size, diameterBottom: this.size, diameterTop: 0 }, this.ctx!.scene);
+                mesh = MeshBuilder.CreateCylinder(`cone.${idx}`, { height: this.size, diameterBottom: this.size, diameterTop: 0 }, scene);
                 break;
             case 3:
-                mesh = MeshBuilder.CreateIcoSphere(`diamond.${idx}`, { radius: 0.5 * this.size, subdivisions: 1 }, this.ctx!.scene);
+                mesh = MeshBuilder.CreateIcoSphere(`diamond.${idx}`, { radius: 0.5 * this.size, subdivisions: 1 }, scene);
                 break;
             default:
                 throw Error();
@@ -68,6 +77,7 @@ export class MyStuffElem extends ReactiveElement {
         return mesh;
     }
 
+
     async #createStuff() {
         debug(this, "creating", { count: this.count });
 
@@ -76,6 +86,6 @@ export class MyStuffElem extends ReactiveElement {
         this._defaultMat.roughness = 0.5;
 
 
-        for(let i = 0; i < this.count; i++) this._createItem(i % 4, (i + 1).toString().padStart(3, '0'));
+        for(let i = 0; i < this.count; i++) this._createItem(i % 4);
     }
 }

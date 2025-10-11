@@ -45,9 +45,9 @@
 <body>
     
     <our-app class="h-100 container p-0 border rounded-3">
-        <my-babylon worldSize="32" rightHanded picking dragging>
-            <my-camera-arc autoSpin autoZoom></my-camera-arc>
-            <my-environ sky skyIntens="0.1"></my-environ>
+        <my-babylon worldSize="32" picking dragging highlighting>
+            <my-camera-arc autoSpin autoZoom autoFocus focusFactor="0.5"></my-camera-arc>
+            <my-environ sky skyIntens="0.1" skyBlur="0.75"></my-environ>
             <my-ground autoSize></my-ground>
             <my-stuff radius="5" count="3"></my-stuff>
             <my-something></my-something>
@@ -68,13 +68,21 @@
             camera: document.querySelector("my-camera-arc"),
         };
 
+        my.babylon.addEventListener('babylon.updated', function(e) {
+            console.debug(e.type, e.detail);
+        })
+
         my.babylon.addEventListener('babylon.picked', function(e) {
             console.debug(e.type, e.detail);
         });
 
-        my.babylon.addEventListener('babylon.updated', function(e) {
+        my.babylon.addEventListener('babylon.grabbed', function(e) {
             console.debug(e.type, e.detail);
-        })
+        });
+
+        my.babylon.addEventListener('babylon.dropped', function(e) {
+            console.debug(e.type, e.detail);
+        });
     </script>
 
 
