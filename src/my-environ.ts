@@ -8,7 +8,6 @@ import { CubeTexture } from "@babylonjs/core/Materials/Textures/cubeTexture";
 import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
-import { Tags } from "@babylonjs/core/Misc/tags";
 import type { Nullable } from "@babylonjs/core/types";
 
 import { babylonCtx, type BabylonCtx } from "./context";
@@ -62,17 +61,19 @@ export class MyEnvironElem extends ReactiveElement {
 
     #createEnv() {
         const scene = this.ctx!.scene;
+        
         if (this.src) {
             this._envTxt = new CubeTexture(this.src, scene);
         } else {
             this._envTxt = new CubeTexture(DEFAULT_ENV.href, scene, { forcedExtension: ".env" });
         }
         this._envTxt.level = this.envIntens;
-        this.ctx!.scene.environmentTexture = this._envTxt;
+        scene.environmentTexture = this._envTxt;
     }
 
     #createSky() {
         const scene = this.ctx!.scene;
+
         this._skyTxt = this._envTxt!.clone();
         this._skyTxt.level = this.skyIntens;
         this._skyTxt.coordinatesMode = Texture.SKYBOX_MODE;
@@ -83,10 +84,11 @@ export class MyEnvironElem extends ReactiveElement {
         this._skyMat.reflectionBlur = this.skyBlur;
 
         this._skyBox = CreateBox("(SkyBox)", { size: this.ctx!.size, sideOrientation: Mesh.BACKSIDE }, scene);
-        Tags.AddTagsTo(this._skyBox, "scenery");
         this._skyBox.isPickable = false;
         this._skyBox.material = this._skyMat;
         this._skyBox.infiniteDistance = true;
         this._skyBox.ignoreCameraMaxZ = true;
+
+        scene.markAux(this._skyBox);
     }
 }

@@ -10,7 +10,6 @@ import type { Nullable } from "@babylonjs/core/types";
 import { babylonCtx, type BabylonCtx } from "./context";
 import { assertNonNull } from "./utils/asserts";
 import { debug } from "./utils/debug";
-import { Tags } from "@babylonjs/core/Misc/tags";
 
 @customElement("my-camera-arc")
 export class MyArcCameraElem extends ReactiveElement {
@@ -28,13 +27,10 @@ export class MyArcCameraElem extends ReactiveElement {
     zoomFactor = 1.0;
 
     @property({ type: Number })
-    radius: Nullable<number> = null;
+    initAlpha: number = 45;
 
     @property({ type: Number })
-    alpha: number = 45;
-
-    @property({ type: Number })
-    beta: number = 45;
+    initBeta: number = 45;
 
     protected override shouldUpdate(_changes: PropertyValues): boolean {
         return this.ctx != null;
@@ -44,9 +40,6 @@ export class MyArcCameraElem extends ReactiveElement {
         if (!this.hasUpdated) this.#create();
         else {
             if ((changes.has("ctx") || changes.has("autoZoom")) && this.autoZoom) this.reframe();
-            if (changes.has("alpha")) this._camera.alpha = Tools.ToRadians(this.alpha);
-            if (changes.has("beta")) this._camera.beta = Tools.ToRadians(this.beta);
-            if (changes.has("radius")) this._camera.radius = this.radius ?? 0.5 * this.ctx!.size;
             if (changes.has("autoSpin")) this._camera.useAutoRotationBehavior = this.autoSpin;
         }
         super.update(changes);
@@ -56,11 +49,9 @@ export class MyArcCameraElem extends ReactiveElement {
 
     #create() {
         debug(this, "creating");
-        assertNonNull(this.ctx);
-        const radius = this.radius ?? 0.5 * this.ctx.size;
-
-        this._camera = new ArcRotateCamera("(Camera)", Tools.ToRadians(this.alpha), Tools.ToRadians(this.alpha), radius, Vector3.Zero(), this.ctx.scene);
-        Tags.AddTagsTo(this._camera, "scenery");
+        const scene = this.ctx!.scene;
+        const radius = 0.5 * this.ctx!.size;
+        this._camera = new ArcRotateCamera("(Camera)", Tools.ToRadians(this.initAlpha), Tools.ToRadians(this.initBeta), radius, Vector3.Zero(), scene);
         this._camera.minZ = 0.001;
         this._camera.maxZ = 1000;
         this._camera.lowerRadiusLimit = 1;
@@ -71,8 +62,8 @@ export class MyArcCameraElem extends ReactiveElement {
 
         this._camera.useAutoRotationBehavior = this.autoSpin;
 
-        this.ctx.scene.activeCamera = this._camera;
-        this.ctx.scene.onActiveCameraChanged.add(() => this._camera.autoRotationBehavior?.resetLastInteractionTime());
+        scene.activeCamera = this._camera;
+        scene.onActiveCameraChanged.add(() => this._camera.autoRotationBehavior?.resetLastInteractionTime());
     }
 
     reframe() {

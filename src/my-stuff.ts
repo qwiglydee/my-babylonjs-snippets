@@ -120,6 +120,7 @@ export class MyStuffElem extends ReactiveElement {
                         break;
                 }
             }
+            this.ctx!.scene.onModelUpdatedObservable.notifyObservers([selected]);
         });
     }
 }

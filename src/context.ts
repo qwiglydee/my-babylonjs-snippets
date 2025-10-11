@@ -1,10 +1,10 @@
 import { createContext } from "@lit/context";
 
-import type { Scene } from "@babylonjs/core/scene";
 import type { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
 import type { Nullable } from "@babylonjs/core/types";
 import type { Vector3 } from "@babylonjs/core/Maths";
 import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
+import type { MyScene } from "./scene";
 
 export interface AppCtx {
     status: string;
@@ -16,8 +16,8 @@ export const appCtx = createContext<AppCtx>(Symbol('app'));
 
 
 export interface BabylonCtx {
+    scene: MyScene;
     size: number;
-    scene: Scene;
     utils: UtilityLayerRenderer;
     bounds: { min: Vector3, max: Vector3 }
 }

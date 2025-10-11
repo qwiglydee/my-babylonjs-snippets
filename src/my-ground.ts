@@ -12,7 +12,6 @@ import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
 import { babylonCtx, type BabylonCtx } from "./context";
 import { assertNonNull } from "./utils/asserts";
 import { debug } from "./utils/debug";
-import { Tags } from "@babylonjs/core/Misc/tags";
 
 const GROUND_TXT = new URL("./assets/ground.png?inline", import.meta.url);
 
@@ -75,7 +74,6 @@ export class MyGroundElem extends ReactiveElement {
         const size = this.radius ? this.radius * 2 : this.ctx.size;
 
         this._mesh = CreateGround("(Ground)", { width: 1.0, height: 1.0, subdivisions: 1 }, scene);
-        Tags.AddTagsTo(this._mesh, "scenery");
         this._mesh.isPickable = false;
         this._mesh.scaling.x = size;
         this._mesh.scaling.z = size;
