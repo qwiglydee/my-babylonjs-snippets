@@ -9,19 +9,18 @@ import { AxesViewer } from "@babylonjs/core/Debug/axesViewer";
 import { Engine } from "@babylonjs/core/Engines/engine";
 import type { EngineOptions } from "@babylonjs/core/Engines/thinEngine";
 import { PointerEventTypes, PointerInfo } from "@babylonjs/core/Events/pointerEvents";
+import "@babylonjs/core/Layers/effectLayerSceneComponent";
+import { HighlightLayer } from "@babylonjs/core/Layers/highlightLayer";
 import { Color3, Color4, Vector3 } from "@babylonjs/core/Maths";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
-import { Tags } from "@babylonjs/core/Misc/tags";
 import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
 import type { Nullable } from "@babylonjs/core/types";
-import { HighlightLayer } from "@babylonjs/core/Layers/highlightLayer";
-import "@babylonjs/core/Layers/effectLayerSceneComponent";
 
 import { babylonCtx, pickCtx, utilsCtx, type BabylonCtx, type PickDetail } from "./context";
+import { MyScene } from "./scene";
 import { assertNonNull } from "./utils/asserts";
 import { debug } from "./utils/debug";
 import { bubbleEvent } from "./utils/events";
-import { MyScene } from "./scene";
 
 const ENGOPTIONS: EngineOptions = {
     antialias: true,
@@ -144,9 +143,8 @@ export class MyBabylonElem extends ReactiveElement {
         this.scene = new MyScene(this.engine);
         this.scene.useRightHandedSystem = this.rightHanded;
         this.scene.clearColor = Color4.FromHexString(getComputedStyle(this).getPropertyValue("--my-background-color"));
-        this.utils = UtilityLayerRenderer.DefaultUtilityLayer;
 
-        this.scene.getNodes().forEach((n) => Tags.AddTagsTo(n, "default"));
+        this.utils = UtilityLayerRenderer.DefaultUtilityLayer;
 
         if (this.picking) this.#initPicking();
         if (this.dragging) this.#initDragging();
