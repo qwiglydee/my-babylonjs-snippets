@@ -6,11 +6,11 @@ import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import { Color3 } from "@babylonjs/core/Maths";
 import { CreateGround } from "@babylonjs/core/Meshes/Builders/groundBuilder";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
-import type { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
+import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
 
-import { babylonCtx, utilsCtx, type BabylonCtx } from "./context";
+import { sceneCtx, utilsCtx, type SceneCtx } from "./context";
 import { assertNonNull } from "./utils/asserts";
 import { debug } from "./utils/debug";
 
@@ -18,12 +18,12 @@ const GROUND_TXT = new URL("./assets/ground.png?inline", import.meta.url);
 
 @customElement("my-ground")
 export class MyGroundElem extends ReactiveElement {
-    @consume({ context: babylonCtx, subscribe: true })
+    @consume({ context: sceneCtx, subscribe: true })
     @state()
-    ctx: Nullable<BabylonCtx> = null;
+    ctx: Nullable<SceneCtx> = null;
 
     @consume({ context: utilsCtx, subscribe: false })
-    utils!: UtilityLayerRenderer;
+    utils!: Scene;
 
     @property({ type: Boolean })
     autoSize = false;
@@ -70,7 +70,7 @@ export class MyGroundElem extends ReactiveElement {
 
     #create() {
         assertNonNull(this.ctx);
-        const scene = this.utils.utilityLayerScene;
+        const scene = this.utils;
 
         this._mesh = CreateGround("(Ground)", { width: 1.0, height: 1.0, subdivisions: 1 }, scene);
         this._mesh.isPickable = false;

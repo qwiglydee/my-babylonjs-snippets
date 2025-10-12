@@ -10,14 +10,14 @@ import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Nullable } from "@babylonjs/core/types";
 
-import { babylonCtx, type BabylonCtx } from "./context";
+import { sceneCtx, type SceneCtx } from "./context";
 
 const DEFAULT_ENV = new URL("./assets/studio.env?inline", import.meta.url);
 
 @customElement("my-environ")
 export class MyEnvironElem extends ReactiveElement {
-    @consume({ context: babylonCtx, subscribe: true })
-    ctx: Nullable<BabylonCtx> = null;
+    @consume({ context: sceneCtx, subscribe: true })
+    ctx: Nullable<SceneCtx> = null;
 
     @property()
     src: Nullable<string> = null;

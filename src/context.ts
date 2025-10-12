@@ -1,9 +1,9 @@
 import { createContext } from "@lit/context";
 
-import type { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
-import type { Nullable } from "@babylonjs/core/types";
-import type { Vector3 } from "@babylonjs/core/Maths";
 import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
+import type { Vector3 } from "@babylonjs/core/Maths";
+import type { Scene } from "@babylonjs/core/scene";
+import type { Nullable } from "@babylonjs/core/types";
 import type { MyScene } from "./scene";
 
 export interface AppCtx {
@@ -15,16 +15,16 @@ export interface AppCtx {
 export const appCtx = createContext<AppCtx>(Symbol('app'));
 
 
-export interface BabylonCtx {
-    scene: MyScene;
+export interface SceneCtx {
     worldSize: number;
+    scene: MyScene;
     bounds: { min: Vector3, max: Vector3 }
 }
 
-// NB: non nullable
-export const utilsCtx = createContext<UtilityLayerRenderer>(Symbol('babylo.utils'));
+export const sceneCtx = createContext<Nullable<SceneCtx>>(Symbol('babylon.scene'));
 
-export const babylonCtx = createContext<Nullable<BabylonCtx>>(Symbol('babylon'));
+// NB: non nullable
+export const utilsCtx = createContext<Scene>(Symbol('babylo.utils'));
 
 export const pickCtx = createContext<Nullable<PickingInfo>>(Symbol('babylo.pick'))
 

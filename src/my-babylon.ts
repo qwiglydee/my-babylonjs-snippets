@@ -16,11 +16,12 @@ import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
 import type { Nullable } from "@babylonjs/core/types";
 
-import { babylonCtx, pickCtx, utilsCtx, type BabylonCtx, type PickDetail } from "./context";
+import { sceneCtx, pickCtx, utilsCtx, type SceneCtx, type PickDetail } from "./context";
 import { MyScene } from "./scene";
 import { assertNonNull } from "./utils/asserts";
 import { debug } from "./utils/debug";
 import { bubbleEvent } from "./utils/events";
+import type { Scene } from "@babylonjs/core/scene";
 
 const ENGOPTIONS: EngineOptions = {
     antialias: true,
@@ -33,11 +34,11 @@ const ENGOPTIONS: EngineOptions = {
  */
 @customElement("my-babylon")
 export class MyBabylonElem extends ReactiveElement {
-    @provide({ context: babylonCtx })
-    ctx: Nullable<BabylonCtx> = null; // updated when changed and got ready 
+    @provide({ context: sceneCtx })
+    ctx: Nullable<SceneCtx> = null; // updated when changed and got ready 
 
     @provide({ context: utilsCtx })
-    utils!: UtilityLayerRenderer; // available right after dom connection, const
+    utils!: Scene; // utilityrender scene, available right after dom connection, const
 
     @provide({ context: pickCtx })
     pick: Nullable<PickingInfo> = null;
@@ -144,13 +145,13 @@ export class MyBabylonElem extends ReactiveElement {
         this.scene.useRightHandedSystem = this.rightHanded;
         this.scene.clearColor = Color4.FromHexString(getComputedStyle(this).getPropertyValue("--my-background-color"));
 
-        this.utils = UtilityLayerRenderer.DefaultUtilityLayer;
+        this.utils = (new UtilityLayerRenderer(this.scene, false, false)).utilityLayerScene;
 
         if (this.picking) this.#initPicking();
         if (this.dragging) this.#initDragging();
         if (this.highlighting) this.#initHighlighting();
 
-        new AxesViewer(this.utils.utilityLayerScene);
+        new AxesViewer(this.utils);
 
         this.scene.onModelUpdatedObservable.add(() => this.#invalidateCtx());
         this.#refreshCtx();

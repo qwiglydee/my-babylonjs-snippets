@@ -10,14 +10,14 @@ import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import type { Nullable } from "@babylonjs/core/types";
 
-import { babylonCtx, pickCtx, type BabylonCtx } from "./context";
+import { sceneCtx, pickCtx, type SceneCtx } from "./context";
 import { assertNonNull } from "./utils/asserts";
 import { debug } from "./utils/debug";
 
 @customElement("my-stuff")
 export class MyStuffElem extends ReactiveElement {
-    @consume({ context: babylonCtx, subscribe: true })
-    ctx: Nullable<BabylonCtx> = null;
+    @consume({ context: sceneCtx, subscribe: true })
+    ctx: Nullable<SceneCtx> = null;
 
     @consume({ context: pickCtx, subscribe: true })
     pick: Nullable<PickingInfo> = null;

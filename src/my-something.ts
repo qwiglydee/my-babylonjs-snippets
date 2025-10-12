@@ -4,13 +4,13 @@ import { customElement  } from "lit/decorators.js";
 
 import type { Nullable } from "@babylonjs/core/types";
 
-import { babylonCtx, type BabylonCtx } from "./context";
+import { sceneCtx, type SceneCtx } from "./context";
 import { debugChanges } from "./utils/debug";
 
 @customElement("my-something")
 export class MySomethingElem extends ReactiveElement {
-    @consume({ context: babylonCtx, subscribe: true })
-    ctx: Nullable<BabylonCtx> = null;
+    @consume({ context: sceneCtx, subscribe: true })
+    ctx: Nullable<SceneCtx> = null;
 
     protected override shouldUpdate(_changes: PropertyValues): boolean {
         return this.ctx != null;

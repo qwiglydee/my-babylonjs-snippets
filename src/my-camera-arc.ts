@@ -7,15 +7,15 @@ import { Vector3 } from "@babylonjs/core/Maths";
 import { Tools } from "@babylonjs/core/Misc/tools";
 import type { Nullable } from "@babylonjs/core/types";
 
-import { babylonCtx, type BabylonCtx } from "./context";
+import { sceneCtx, type SceneCtx } from "./context";
 import { assertNonNull } from "./utils/asserts";
 import { debug } from "./utils/debug";
 
 @customElement("my-camera-arc")
 export class MyArcCameraElem extends ReactiveElement {
-    @consume({ context: babylonCtx, subscribe: true })
+    @consume({ context: sceneCtx, subscribe: true })
     @state()
-    ctx: Nullable<BabylonCtx> = null;
+    ctx: Nullable<SceneCtx> = null;
 
     @property({ type: Boolean })
     autoZoom = false;
