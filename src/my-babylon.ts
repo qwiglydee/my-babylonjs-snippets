@@ -17,7 +17,7 @@ import type { Nullable } from "@babylonjs/core/types";
 import { HighlightLayer } from "@babylonjs/core/Layers/highlightLayer";
 import "@babylonjs/core/Layers/effectLayerSceneComponent";
 
-import { babylonCtx, pickCtx, type BabylonCtx, type PickDetail } from "./context";
+import { babylonCtx, pickCtx, utilsCtx, type BabylonCtx, type PickDetail } from "./context";
 import { assertNonNull } from "./utils/asserts";
 import { debug } from "./utils/debug";
 import { bubbleEvent } from "./utils/events";
@@ -35,7 +35,10 @@ const ENGOPTIONS: EngineOptions = {
 @customElement("my-babylon")
 export class MyBabylonElem extends ReactiveElement {
     @provide({ context: babylonCtx })
-    ctx: Nullable<BabylonCtx> = null;
+    ctx: Nullable<BabylonCtx> = null; // updated when changed and got ready 
+
+    @provide({ context: utilsCtx })
+    utils!: UtilityLayerRenderer; // available right after dom connection, const
 
     @provide({ context: pickCtx })
     pick: Nullable<PickingInfo> = null;
@@ -71,7 +74,6 @@ export class MyBabylonElem extends ReactiveElement {
     engine!: Engine;
 
     scene!: MyScene;
-    utils!: UtilityLayerRenderer;
 
     #needresize = true;
     #resizingObs!: ResizeObserver;
@@ -202,9 +204,8 @@ export class MyBabylonElem extends ReactiveElement {
         if (!this._ctx_dirty) return;
         await this.scene.whenReadyAsync(true);
         this.ctx = {
-            size: this.worldSize,
+            worldSize: this.worldSize,
             scene: this.scene,
-            utils: this.utils,
             bounds: this.scene.getModelExtends(),
         };
         this._ctx_dirty = false;

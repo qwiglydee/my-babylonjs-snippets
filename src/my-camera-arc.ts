@@ -50,7 +50,7 @@ export class MyArcCameraElem extends ReactiveElement {
     #create() {
         debug(this, "creating");
         const scene = this.ctx!.scene;
-        const radius = 0.5 * this.ctx!.size;
+        const radius = 0.5 * this.ctx!.worldSize;
         this._camera = new ArcRotateCamera("(Camera)", Tools.ToRadians(this.initAlpha), Tools.ToRadians(this.initBeta), radius, Vector3.Zero(), scene);
         this._camera.minZ = 0.001;
         this._camera.maxZ = 1000;

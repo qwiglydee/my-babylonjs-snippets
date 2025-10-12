@@ -6,10 +6,11 @@ import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import { Color3 } from "@babylonjs/core/Maths";
 import { CreateGround } from "@babylonjs/core/Meshes/Builders/groundBuilder";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import type { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
 import type { Nullable } from "@babylonjs/core/types";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
 
-import { babylonCtx, type BabylonCtx } from "./context";
+import { babylonCtx, utilsCtx, type BabylonCtx } from "./context";
 import { assertNonNull } from "./utils/asserts";
 import { debug } from "./utils/debug";
 
@@ -20,6 +21,9 @@ export class MyGroundElem extends ReactiveElement {
     @consume({ context: babylonCtx, subscribe: true })
     @state()
     ctx: Nullable<BabylonCtx> = null;
+
+    @consume({ context: utilsCtx, subscribe: false })
+    utils!: UtilityLayerRenderer;
 
     @property({ type: Boolean })
     autoSize = false;
@@ -37,7 +41,7 @@ export class MyGroundElem extends ReactiveElement {
     opacity2 = 0.75;
 
     protected override shouldUpdate(_changes: PropertyValues): boolean {
-        return this.ctx != null;
+        return this.ctx != null && this.utils != null;
     }
 
     override update(changes: PropertyValues) {
@@ -49,7 +53,7 @@ export class MyGroundElem extends ReactiveElement {
                 }
             } else {
                 if (changes.has("radius")) {
-                    this.#resize(this.radius ? this.radius * 2 : this.ctx!.size);
+                    this.#resize(this.radius ? this.radius * 2 : this.ctx!.worldSize);
                 }
             }
 
@@ -70,8 +74,8 @@ export class MyGroundElem extends ReactiveElement {
 
     #create() {
         assertNonNull(this.ctx);
-        const scene = this.ctx.utils.utilityLayerScene;
-        const size = this.radius ? this.radius * 2 : this.ctx.size;
+        const scene = this.utils.utilityLayerScene;
+        const size = this.radius ? this.radius * 2 : this.ctx.worldSize;
 
         this._mesh = CreateGround("(Ground)", { width: 1.0, height: 1.0, subdivisions: 1 }, scene);
         this._mesh.isPickable = false;

@@ -17,10 +17,12 @@ export const appCtx = createContext<AppCtx>(Symbol('app'));
 
 export interface BabylonCtx {
     scene: MyScene;
-    size: number;
-    utils: UtilityLayerRenderer;
+    worldSize: number;
     bounds: { min: Vector3, max: Vector3 }
 }
+
+// NB: non nullable
+export const utilsCtx = createContext<UtilityLayerRenderer>(Symbol('babylo.utils'));
 
 export const babylonCtx = createContext<Nullable<BabylonCtx>>(Symbol('babylon'));
 

@@ -47,7 +47,7 @@ export class MyStuffElem extends ReactiveElement {
     }
 
     #randomLoc() {
-        const radius = this.radius ?? this.ctx!.size * 0.5;
+        const radius = this.radius ?? this.ctx!.worldSize * 0.5;
 
         const rndc = () => (Math.random() * 2 - 1) * radius;
         const snap = (coord: number) => this.size * (0.5 + Math.floor(coord / this.size));
@@ -105,7 +105,7 @@ export class MyStuffElem extends ReactiveElement {
             if (info.type != KeyboardEventTypes.KEYDOWN && "gsr".includes(info.event.key)) {
                 switch (info.event.key) {
                     case "g":
-                        const radius = this.radius ?? this.ctx!.size * 0.5;
+                        const radius = this.radius ?? this.ctx!.worldSize * 0.5;
                         selected.position.x = (Math.random() * 2 - 1) * radius;
                         selected.position.z = (Math.random() * 2 - 1) * radius;
 
