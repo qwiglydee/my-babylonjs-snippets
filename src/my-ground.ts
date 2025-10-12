@@ -45,17 +45,13 @@ export class MyGroundElem extends ReactiveElement {
     }
 
     override update(changes: PropertyValues) {
-        if (!this.hasUpdated) this.#create();
+        if (!this.hasUpdated) {
+            this.#create();
+            this.resize();
+        }
         else {
-            if (this.autoSize) {
-                if (changes.has("ctx") || changes.has("autoSize")) {
-                    this.#resize(4 * Math.max(this.ctx!.bounds.max.length(), this.ctx!.bounds.min.length()));
-                }
-            } else {
-                if (changes.has("radius")) {
-                    this.#resize(this.radius ? this.radius * 2 : this.ctx!.worldSize);
-                }
-            }
+            if ((changes.has("ctx") || changes.has("autoSize")) && this.autoSize) this.resize();
+            if (changes.has("radius") && !this.autoSize) this.resize();
 
             if (changes.has("opacity")) {
                 this._mtl.opacity = this.opacity;
@@ -75,28 +71,31 @@ export class MyGroundElem extends ReactiveElement {
     #create() {
         assertNonNull(this.ctx);
         const scene = this.utils.utilityLayerScene;
-        const size = this.radius ? this.radius * 2 : this.ctx.worldSize;
 
         this._mesh = CreateGround("(Ground)", { width: 1.0, height: 1.0, subdivisions: 1 }, scene);
         this._mesh.isPickable = false;
-        this._mesh.scaling.x = size;
-        this._mesh.scaling.z = size;
 
         this._mtl = new GridMaterial("(Ground)", scene);
         this._mtl.lineColor = Color3.FromHexString(this.color);
         this._mtl.majorUnitFrequency = 8;
         this._mtl.minorUnitVisibility = this.opacity2;
         this._mtl.backFaceCulling = false;
-        this._mtl.gridRatio = 1 / size;
         this._mtl.opacity = this.opacity;
         this._mtl.opacityTexture = new Texture(GROUND_TXT.href, scene);
 
         this._mesh.material = this._mtl;
-
-        this.#resize(size);
     }
 
-    #resize(size: number) {
+    resize() {
+        assertNonNull(this.ctx);
+        if (this.autoSize) {
+            this._resize(4 * Math.max(this.ctx!.bounds.max.length(), this.ctx!.bounds.min.length()));
+        } else {
+            this._resize(this.radius ? this.radius * 2 : this.ctx.worldSize)
+        }
+    }
+
+    _resize(size: number) {
         debug(this, "resizing", { size });
         this._mesh.scaling.x = size;
         this._mesh.scaling.z = size;

@@ -252,6 +252,7 @@ export class MyBabylonElem extends ReactiveElement {
 
     ondropped(mesh: Mesh) {
         assertNonNull(mesh);
+        this.#invalidateCtx();
         bubbleEvent<PickDetail>(this, "babylon.dropped", { state: "dropped", mesh: mesh.id });
         if (mesh === this._selected) this.unpick();
     }
