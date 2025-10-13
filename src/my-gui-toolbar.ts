@@ -1,6 +1,6 @@
 import { consume } from "@lit/context";
 import { ReactiveElement, type PropertyValues } from "lit";
-import { customElement } from "lit/decorators.js";
+import { customElement, property } from "lit/decorators.js";
 
 import type { EventState } from "@babylonjs/core/Misc/observable";
 import type { Nullable } from "@babylonjs/core/types";
@@ -13,20 +13,24 @@ import type { Vector2WithInfo } from "@babylonjs/gui/2D/math2D";
 import { guiCtx, sceneCtx, type SceneCtx } from "./context";
 import { debug } from "./utils/debug";
 
-@customElement("my-gui-something")
-export class MyGUISomethingElem extends ReactiveElement {
+@customElement("my-gui-toolbar")
+export class MyGUIToolbarElem extends ReactiveElement {
     @consume({ context: sceneCtx, subscribe: true })
     ctx: Nullable<SceneCtx> = null;
     
     @consume({ context: guiCtx, subscribe: false })
     gui!: AdvancedDynamicTexture;
 
-    protected override shouldUpdate(_changes: PropertyValues): boolean {
-        return this.gui != null;
-    }
+    @property({ type: Number })
+    zIndex = 100;
 
     override update(changes: PropertyValues) {
         if (!this.hasUpdated) this.#init();
+        else {
+            if (changes.has('zIndex')) {
+                this._toolbar.zIndex = this.zIndex;
+            }
+        }
         super.update(changes);
     }
 
@@ -40,6 +44,7 @@ export class MyGUISomethingElem extends ReactiveElement {
         rect.width = "100%";
         rect.background = "lightgray";
         rect.thickness = 0;
+        rect.zIndex = this.zIndex;
         this._toolbar = rect; 
         this.gui!.addControl(rect);
     
