@@ -9,3 +9,4 @@ import "./my-camera-arc";
 import "./my-environ";
 
 import "./my-gui-toolbar";
+import "./my-gui-hotspot";
