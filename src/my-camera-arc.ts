@@ -10,15 +10,15 @@ import { Tags } from "@babylonjs/core/Misc/tags";
 import { Tools } from "@babylonjs/core/Misc/tools";
 import type { Nullable } from "@babylonjs/core/types";
 
-import { babylonCtx, pickCtx, type BabylonCtx } from "./context";
+import { sceneCtx, pickCtx, type SceneCtx } from "./context";
 import { assertNonNull } from "./utils/asserts";
 import { debug } from "./utils/debug";
 
 @customElement("my-camera-arc")
 export class MyArcCameraElem extends ReactiveElement {
-    @consume({ context: babylonCtx, subscribe: true })
+    @consume({ context: sceneCtx, subscribe: true })
     @state()
-    ctx: Nullable<BabylonCtx> = null;
+    ctx: Nullable<SceneCtx> = null;
 
     @consume({ context: pickCtx, subscribe: true })
     @state()
@@ -68,22 +68,28 @@ export class MyArcCameraElem extends ReactiveElement {
 
     #create() {
         debug(this, "creating");
-        assertNonNull(this.ctx);
-        const radius = 0.5 * this.ctx.size;
-        this._camera = new ArcRotateCamera("(Camera)", Tools.ToRadians(this.initAlpha), Tools.ToRadians(this.initBeta), radius, Vector3.Zero(), this.ctx.scene);
-        Tags.AddTagsTo(this._camera, "scenery");
+        const scene = this.ctx!.scene;
+        const radius = 0.5 * this.ctx!.worldSize;
+        this._camera = new ArcRotateCamera("(Camera)", Tools.ToRadians(this.initAlpha), Tools.ToRadians(this.initBeta), radius, Vector3.Zero(), scene);
+        this._camera.setEnabled(false);
         this._camera.minZ = 0.001;
         this._camera.maxZ = 1000;
         this._camera.lowerRadiusLimit = 1;
         this._camera.upperRadiusLimit = radius;
         this._camera.wheelDeltaPercentage = 0.01; // ??
         this._camera.useNaturalPinchZoom = true;
-        this._camera.attachControl();
 
-        this._camera.useAutoRotationBehavior = this.autoSpin;
-
-        this.ctx.scene.activeCamera = this._camera;
-        this.ctx.scene.onActiveCameraChanged.add(() => this._camera.autoRotationBehavior?.resetLastInteractionTime());
+        this._camera.onEnabledStateChangedObservable.add(() => {
+            if (this._camera.isEnabled()) {
+                this._camera.useAutoRotationBehavior = this.autoSpin;
+                this._camera.attachControl(); 
+            } else { 
+                this._camera.useAutoRotationBehavior = false;
+                this._camera.detachControl();
+            }
+        });
+        scene.activeCamera = this._camera;
+        this._camera.setEnabled(true);
     }
 
     /** reset to initial position */

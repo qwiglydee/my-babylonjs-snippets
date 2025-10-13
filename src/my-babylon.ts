@@ -3,25 +3,24 @@ import { css, ReactiveElement, type PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
 import { PointerDragBehavior } from "@babylonjs/core/Behaviors/Meshes/pointerDragBehavior";
-import type { Camera } from "@babylonjs/core/Cameras/camera";
 import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
 import { AxesViewer } from "@babylonjs/core/Debug/axesViewer";
 import { Engine } from "@babylonjs/core/Engines/engine";
 import type { EngineOptions } from "@babylonjs/core/Engines/thinEngine";
 import { PointerEventTypes, PointerInfo } from "@babylonjs/core/Events/pointerEvents";
+import "@babylonjs/core/Layers/effectLayerSceneComponent";
+import { HighlightLayer } from "@babylonjs/core/Layers/highlightLayer";
 import { Color3, Color4, Vector3 } from "@babylonjs/core/Maths";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
-import { Tags } from "@babylonjs/core/Misc/tags";
 import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
 import type { Nullable } from "@babylonjs/core/types";
-import { HighlightLayer } from "@babylonjs/core/Layers/highlightLayer";
-import "@babylonjs/core/Layers/effectLayerSceneComponent";
 
-import { babylonCtx, pickCtx, type BabylonCtx, type PickDetail } from "./context";
+import { sceneCtx, pickCtx, utilsCtx, type SceneCtx, type PickDetail } from "./context";
+import { MyScene } from "./scene";
 import { assertNonNull } from "./utils/asserts";
 import { debug } from "./utils/debug";
 import { bubbleEvent } from "./utils/events";
-import { MyScene } from "./scene";
+import type { Scene } from "@babylonjs/core/scene";
 
 const ENGOPTIONS: EngineOptions = {
     antialias: true,
@@ -34,8 +33,11 @@ const ENGOPTIONS: EngineOptions = {
  */
 @customElement("my-babylon")
 export class MyBabylonElem extends ReactiveElement {
-    @provide({ context: babylonCtx })
-    ctx: Nullable<BabylonCtx> = null;
+    @provide({ context: sceneCtx })
+    ctx: Nullable<SceneCtx> = null; // updated when changed and got ready 
+
+    @provide({ context: utilsCtx })
+    utils!: Scene; // utilityrender scene, available right after dom connection, const
 
     @provide({ context: pickCtx })
     pick: Nullable<PickingInfo> = null;
@@ -71,7 +73,6 @@ export class MyBabylonElem extends ReactiveElement {
     engine!: Engine;
 
     scene!: MyScene;
-    utils!: UtilityLayerRenderer;
 
     #needresize = true;
     #resizingObs!: ResizeObserver;
@@ -92,33 +93,46 @@ export class MyBabylonElem extends ReactiveElement {
         );
     }
 
-    __camera_bak: Nullable<Camera> = null;
-
     #startRendering() {
-        if (this.__camera_bak) {
-            this.scene.activeCamera = this.__camera_bak;
-            this.scene.activeCamera?.attachControl();
-        }
+        this.scene.activeCamera?.setEnabled(true);
         this.engine.runRenderLoop(this.#rendering);
     }
 
     #stopRendering() {
         this.engine.stopRenderLoop(this.#rendering);
-        if (this.scene.activeCamera) {
-            this.scene.activeCamera?.detachControl();
-            this.__camera_bak = this.scene.activeCamera;
-            this.scene.activeCamera = null;
-        }
+        this.scene.activeCamera?.setEnabled(false);
     }
 
     #rendering = () => {
-        if (!this.scene.activeCamera) return;
         if (this.#needresize) {
             this.engine.resize();
             this.#needresize = false;
         }
-        this.scene.render();
+        if (this.scene.activeCamera) {
+            this.scene.render();        
+        }
     };
+
+    @state()
+    _ctx_dirty = true;
+
+    #invalidateCtx() {
+        this._ctx_dirty = true;
+    }
+
+    /** this notifies all plugged in subscribers */
+    async #refreshCtx() {
+        if (!this._ctx_dirty) return;
+        await this.scene.whenReadyAsync(true);
+        this.ctx = {
+            worldSize: this.worldSize,
+            scene: this.scene,
+            bounds: this.scene.getModelExtends(),
+        };
+        this._ctx_dirty = false;
+        debug(this, `CTX ==`, this.ctx);
+        bubbleEvent(this, "babylon.updated", {});
+    }
 
     override connectedCallback(): void {
         super.connectedCallback();
@@ -142,15 +156,14 @@ export class MyBabylonElem extends ReactiveElement {
         this.scene = new MyScene(this.engine);
         this.scene.useRightHandedSystem = this.rightHanded;
         this.scene.clearColor = Color4.FromHexString(getComputedStyle(this).getPropertyValue("--my-background-color"));
-        this.utils = UtilityLayerRenderer.DefaultUtilityLayer;
 
-        this.scene.getNodes().forEach((n) => Tags.AddTagsTo(n, "default"));
+        this.utils = (new UtilityLayerRenderer(this.scene, false, false)).utilityLayerScene;
 
         if (this.picking) this.#initPicking();
         if (this.dragging) this.#initDragging();
         if (this.highlighting) this.#initHighlighting();
 
-        new AxesViewer(this.utils.utilityLayerScene);
+        new AxesViewer(this.utils);
 
         this.scene.onModelUpdatedObservable.add(() => this.#invalidateCtx());
         this.#refreshCtx();
@@ -190,29 +203,6 @@ export class MyBabylonElem extends ReactiveElement {
         super.update(changes);
     }
 
-    @state()
-    _ctx_dirty = true;
-
-    #invalidateCtx() {
-        this._ctx_dirty = true;
-    }
-
-    /** this notifies all plugged in subscribers */
-    async #refreshCtx() {
-        if (!this._ctx_dirty) return;
-        await this.scene.whenReadyAsync(true);
-        this.ctx = {
-            size: this.worldSize,
-            scene: this.scene,
-            utils: this.utils,
-            bounds: this.scene.getModelExtends(),
-        };
-        this._ctx_dirty = false;
-        debug(this, `CTX ==`, this.ctx);
-        bubbleEvent(this, "babylon.updated", {});
-    }
-
-
     #select(mesh: Mesh) {
         if (this._dragBhv) this._dragBhv.attach(mesh);
         if (this._highlighter) this._highlighter.addMesh(mesh, this._highloghtColor);
@@ -251,6 +241,7 @@ export class MyBabylonElem extends ReactiveElement {
 
     ondropped(mesh: Mesh) {
         assertNonNull(mesh);
+        this.#invalidateCtx();
         bubbleEvent<PickDetail>(this, "babylon.dropped", { state: "dropped", mesh: mesh.id });
         if (mesh === this._selected) this.unpick();
     }

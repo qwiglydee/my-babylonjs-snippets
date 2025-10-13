@@ -10,14 +10,14 @@ import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Nullable } from "@babylonjs/core/types";
 
-import { babylonCtx, type BabylonCtx } from "./context";
+import { sceneCtx, type SceneCtx } from "./context";
 
 const DEFAULT_ENV = new URL("./assets/studio.env?inline", import.meta.url);
 
 @customElement("my-environ")
 export class MyEnvironElem extends ReactiveElement {
-    @consume({ context: babylonCtx, subscribe: true })
-    ctx: Nullable<BabylonCtx> = null;
+    @consume({ context: sceneCtx, subscribe: true })
+    ctx: Nullable<SceneCtx> = null;
 
     @property()
     src: Nullable<string> = null;
@@ -83,7 +83,7 @@ export class MyEnvironElem extends ReactiveElement {
         this._skyMat.reflectionTexture = this._skyTxt;
         this._skyMat.reflectionBlur = this.skyBlur;
 
-        this._skyBox = CreateBox("(SkyBox)", { size: this.ctx!.size, sideOrientation: Mesh.BACKSIDE }, scene);
+        this._skyBox = CreateBox("(SkyBox)", { size: this.ctx!.worldSize, sideOrientation: Mesh.BACKSIDE }, scene);
         this._skyBox.isPickable = false;
         this._skyBox.material = this._skyMat;
         this._skyBox.infiniteDistance = true;
