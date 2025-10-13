@@ -10,17 +10,20 @@ import type { EngineOptions } from "@babylonjs/core/Engines/thinEngine";
 import { PointerEventTypes, PointerInfo } from "@babylonjs/core/Events/pointerEvents";
 import "@babylonjs/core/Layers/effectLayerSceneComponent";
 import { HighlightLayer } from "@babylonjs/core/Layers/highlightLayer";
+import { BackgroundMaterial } from "@babylonjs/core/Materials/Background/backgroundMaterial";
 import { Color3, Color4, Vector3 } from "@babylonjs/core/Maths";
+import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
+import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
 
-import { sceneCtx, pickCtx, utilsCtx, type SceneCtx, type PickDetail } from "./context";
+import { pickCtx, sceneCtx, utilsCtx, type PickDetail, type SceneCtx } from "./context";
+import { GhostBehavior } from "./lib/ghostbhv";
 import { MyScene } from "./scene";
 import { assertNonNull } from "./utils/asserts";
 import { debug } from "./utils/debug";
 import { bubbleEvent } from "./utils/events";
-import type { Scene } from "@babylonjs/core/scene";
 
 const ENGOPTIONS: EngineOptions = {
     antialias: true,
@@ -56,6 +59,9 @@ export class MyBabylonElem extends ReactiveElement {
 
     @property({ type: Boolean })
     highlighting = false;
+
+    @property({ type: Boolean })
+    ghosting = false;
 
     static override styles = css`
         :host {
@@ -162,6 +168,7 @@ export class MyBabylonElem extends ReactiveElement {
         if (this.picking) this.#initPicking();
         if (this.dragging) this.#initDragging();
         if (this.highlighting) this.#initHighlighting();
+        if (this.ghosting) this.#initGhost();
 
         new AxesViewer(this.utils);
 
@@ -181,6 +188,7 @@ export class MyBabylonElem extends ReactiveElement {
     _dragBhv: Nullable<PointerDragBehavior> = null;
     #initDragging() {
         this._dragBhv = new PointerDragBehavior({ dragPlaneNormal: Vector3.Up() });
+        this._dragBhv.dragDeltaRatio = 1.0;
         this._dragBhv.onDragStartObservable.add(() => this.ongrabbed(this._dragBhv!.attachedNode as Mesh));
         this._dragBhv.onDragEndObservable.add(() => this.ondropped(this._dragBhv!.attachedNode as Mesh));
     }
@@ -191,6 +199,17 @@ export class MyBabylonElem extends ReactiveElement {
     
     #initHighlighting() {
         this._highlighter = new HighlightLayer("highlight", this.scene);
+    }
+
+    _ghostBhv: Nullable<GhostBehavior> = null;
+    #initGhost() {
+        const ghost = CreateBox("(ghost)", {}, this.utils.utilityLayerScene);
+        ghost.isPickable = false;
+        ghost.material = new BackgroundMaterial("(ghost)", this.utils.utilityLayerScene);
+        ghost.material.alpha = 0.25;
+        
+        this._ghostBhv = new GhostBehavior();
+        this._ghostBhv.attach(ghost);
     }
 
     #dispose() {
@@ -204,11 +223,13 @@ export class MyBabylonElem extends ReactiveElement {
     }
 
     #select(mesh: Mesh) {
-        if (this._dragBhv) this._dragBhv.attach(mesh);
         if (this._highlighter) this._highlighter.addMesh(mesh, this._highloghtColor);
+        if (this._dragBhv) this._dragBhv.attach(mesh);
+        if (this._ghostBhv) this._ghostBhv.targetMesh = mesh;
     } 
 
     #deselect(mesh: Mesh) {
+        if (this._ghostBhv) this._ghostBhv.targetMesh = null;
         if (this._dragBhv) this._dragBhv.detach();
         if (this._highlighter) this._highlighter.removeMesh(mesh);
     }
