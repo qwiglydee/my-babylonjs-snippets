@@ -54,7 +54,7 @@
 
             <my-gui-toolbar></my-gui-toolbar>
             <my-gui-hotspot id="001" anchor="box.001"></my-gui-hotspot>
-            <my-gui-hotspot id="003" zIndex="101" anchor="diamond.005"></my-gui-hotspot>
+            <my-gui-hotspot id="003" anchor="ball.002" blinking></my-gui-hotspot>
         </my-babylon>
         <our-status></our-status>
     </our-app>
@@ -70,6 +70,7 @@
             ground: document.querySelector("my-ground"),
             stuff: document.querySelector("my-stuff"),
             camera: document.querySelector("my-camera-arc"),
+            hotspots: document.querySelectorAll("my-gui-hotspot"),
         };
 
         my.babylon.addEventListener('babylon.updated', function(e) {
