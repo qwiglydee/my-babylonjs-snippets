@@ -5,26 +5,11 @@ import { customElement, property, state } from "lit/decorators.js";
 import type { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import type { Nullable } from "@babylonjs/core/types";
 import type { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
-import { Container } from "@babylonjs/gui/2D/controls/container";
-import { Ellipse } from "@babylonjs/gui/2D/controls/ellipse";
-import { Animation } from "@babylonjs/core/Animations/animation";
 
 import { guiCtx, sceneCtx, type SceneCtx } from "./context";
 import { debug } from "./utils/debug";
 import { PointerEventTypes, type PointerInfo } from "@babylonjs/core/Events/pointerEvents";
-
-
-function createBlinking() {
-    const a = new Animation("blinking", "alpha", 24, Animation.ANIMATIONTYPE_FLOAT, Animation.ANIMATIONLOOPMODE_CONSTANT); 
-    a.setKeys([
-        { frame: 0, value: 0 },
-        { frame: 3, value: 0.75},
-        { frame: 6, value: 1.0},
-        { frame: 9, value: 0.75},
-        { frame: 12, value: 0 },
-    ])
-    return a;
-}
+import { Spot } from "./lib/guispot";
 
 
 @customElement("my-gui-hotspot")
@@ -49,18 +34,16 @@ export class MyGUIHotspotElem extends ReactiveElement {
     disabled = false;
 
     @property()
-    color: string = "yellow";
+    color: string = "#f0f020";
 
     @property({ type: Number })
     alpha = 0.5;
 
     @property({ type: Number })
-    size: number = 32;
+    size: number = 48;
 
     @property({ type: Boolean })
     blinking = false;
-
-    static _blinking: Animation = createBlinking();
 
     protected override shouldUpdate(_changes: PropertyValues): boolean {
         return this.ctx != null;
@@ -78,11 +61,12 @@ export class MyGUIHotspotElem extends ReactiveElement {
         }
 
         if (changes.has('blinking')) {
+            this._spot.blinking = this.blinking;
             this._spot.alpha = this.blinking ? 0 : this.alpha;
         }
 
         if (changes.has('color')) {
-            this._spot.background = this.color;
+            this._spot.color = this.color;
         }
 
         if (changes.has('size')) {
@@ -97,17 +81,17 @@ export class MyGUIHotspotElem extends ReactiveElement {
         super.update(changes);
     }
 
-    _spot!: Container;
+    _spot!: Spot;
 
     #init() {
         debug(this, "creating");
-        const spot = new Ellipse(`(hotspot-${this.id})`);
-        spot.background = this.color;
-        spot.thickness = 0;
-        spot.width = `${this.size}px`;
-        spot.height = `${this.size}px`;
+        const spot = new Spot(`(hotspot-${this.id})`);
+        spot.color = this.color;
+        spot.widthInPixels = this.size;
+        spot.heightInPixels = this.size;
         spot.isVisible = false;
         spot.zIndex = this.zIndex;
+        spot.blinking = this.blinking;
         this._spot = spot;
         this.gui.addControl(this._spot);
 
@@ -133,7 +117,6 @@ export class MyGUIHotspotElem extends ReactiveElement {
 
     blink() {
         if (!this._spot.isVisible) return;
-        if (!this._spot.animations?.length) this._spot.animations = [MyGUIHotspotElem._blinking];
-        this.ctx!.scene.beginAnimation(this._spot, 0, 12, false);
+        this._spot.blink(this.ctx!.scene);
     }
 }
