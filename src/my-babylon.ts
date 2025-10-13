@@ -13,14 +13,15 @@ import { HighlightLayer } from "@babylonjs/core/Layers/highlightLayer";
 import { Color3, Color4, Vector3 } from "@babylonjs/core/Maths";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
+import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
+import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
 
-import { sceneCtx, pickCtx, utilsCtx, type SceneCtx, type PickDetail } from "./context";
+import { guiCtx, pickCtx, sceneCtx, utilsCtx, type PickDetail, type SceneCtx } from "./context";
 import { MyScene } from "./scene";
 import { assertNonNull } from "./utils/asserts";
 import { debug } from "./utils/debug";
 import { bubbleEvent } from "./utils/events";
-import type { Scene } from "@babylonjs/core/scene";
 
 const ENGOPTIONS: EngineOptions = {
     antialias: true,
@@ -38,6 +39,9 @@ export class MyBabylonElem extends ReactiveElement {
 
     @provide({ context: utilsCtx })
     utils!: Scene; // utilityrender scene, available right after dom connection, const
+
+    @provide({ context: guiCtx })
+    gui!: AdvancedDynamicTexture;
 
     @provide({ context: pickCtx })
     pick: Nullable<PickingInfo> = null;
@@ -157,7 +161,8 @@ export class MyBabylonElem extends ReactiveElement {
         this.scene.useRightHandedSystem = this.rightHanded;
         this.scene.clearColor = Color4.FromHexString(getComputedStyle(this).getPropertyValue("--my-background-color"));
 
-        this.utils = (new UtilityLayerRenderer(this.scene, false, false)).utilityLayerScene;
+        this.utils = (new UtilityLayerRenderer(this.scene)).utilityLayerScene;
+        this.gui = AdvancedDynamicTexture.CreateFullscreenUI("GUI", true, this.utils); // on top of utils scene
 
         if (this.picking) this.#initPicking();
         if (this.dragging) this.#initDragging();

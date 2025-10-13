@@ -4,6 +4,8 @@ import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
 import type { Vector3 } from "@babylonjs/core/Maths";
 import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
+import type { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
+
 import type { MyScene } from "./scene";
 
 export interface AppCtx {
@@ -27,6 +29,8 @@ export const sceneCtx = createContext<Nullable<SceneCtx>>(Symbol('babylon.scene'
 export const utilsCtx = createContext<Scene>(Symbol('babylo.utils'));
 
 export const pickCtx = createContext<Nullable<PickingInfo>>(Symbol('babylo.pick'))
+
+export const guiCtx = createContext<AdvancedDynamicTexture>(Symbol('babylon.gui'));
 
 export interface PickDetail {
     mesh: Nullable<string>;
