@@ -3,7 +3,6 @@ import { css, ReactiveElement, type PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
 import { PointerDragBehavior } from "@babylonjs/core/Behaviors/Meshes/pointerDragBehavior";
-import type { Camera } from "@babylonjs/core/Cameras/camera";
 import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
 import { AxesViewer } from "@babylonjs/core/Debug/axesViewer";
 import { Engine } from "@babylonjs/core/Engines/engine";
@@ -94,33 +93,46 @@ export class MyBabylonElem extends ReactiveElement {
         );
     }
 
-    __camera_bak: Nullable<Camera> = null;
-
     #startRendering() {
-        if (this.__camera_bak) {
-            this.scene.activeCamera = this.__camera_bak;
-            this.scene.activeCamera?.attachControl();
-        }
+        this.scene.activeCamera?.setEnabled(true);
         this.engine.runRenderLoop(this.#rendering);
     }
 
     #stopRendering() {
         this.engine.stopRenderLoop(this.#rendering);
-        if (this.scene.activeCamera) {
-            this.scene.activeCamera?.detachControl();
-            this.__camera_bak = this.scene.activeCamera;
-            this.scene.activeCamera = null;
-        }
+        this.scene.activeCamera?.setEnabled(false);
     }
 
     #rendering = () => {
-        if (!this.scene.activeCamera) return;
         if (this.#needresize) {
             this.engine.resize();
             this.#needresize = false;
         }
-        this.scene.render();
+        if (this.scene.activeCamera) {
+            this.scene.render();        
+        }
     };
+
+    @state()
+    _ctx_dirty = true;
+
+    #invalidateCtx() {
+        this._ctx_dirty = true;
+    }
+
+    /** this notifies all plugged in subscribers */
+    async #refreshCtx() {
+        if (!this._ctx_dirty) return;
+        await this.scene.whenReadyAsync(true);
+        this.ctx = {
+            worldSize: this.worldSize,
+            scene: this.scene,
+            bounds: this.scene.getModelExtends(),
+        };
+        this._ctx_dirty = false;
+        debug(this, `CTX ==`, this.ctx);
+        bubbleEvent(this, "babylon.updated", {});
+    }
 
     override connectedCallback(): void {
         super.connectedCallback();
@@ -190,28 +202,6 @@ export class MyBabylonElem extends ReactiveElement {
         if (changes.has("_ctx_dirty")) this.#refreshCtx();
         super.update(changes);
     }
-
-    @state()
-    _ctx_dirty = true;
-
-    #invalidateCtx() {
-        this._ctx_dirty = true;
-    }
-
-    /** this notifies all plugged in subscribers */
-    async #refreshCtx() {
-        if (!this._ctx_dirty) return;
-        await this.scene.whenReadyAsync(true);
-        this.ctx = {
-            worldSize: this.worldSize,
-            scene: this.scene,
-            bounds: this.scene.getModelExtends(),
-        };
-        this._ctx_dirty = false;
-        debug(this, `CTX ==`, this.ctx);
-        bubbleEvent(this, "babylon.updated", {});
-    }
-
 
     #select(mesh: Mesh) {
         if (this._dragBhv) this._dragBhv.attach(mesh);

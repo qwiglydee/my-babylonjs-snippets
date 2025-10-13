@@ -52,18 +52,25 @@ export class MyArcCameraElem extends ReactiveElement {
         const scene = this.ctx!.scene;
         const radius = 0.5 * this.ctx!.worldSize;
         this._camera = new ArcRotateCamera("(Camera)", Tools.ToRadians(this.initAlpha), Tools.ToRadians(this.initBeta), radius, Vector3.Zero(), scene);
+        this._camera.setEnabled(false);
         this._camera.minZ = 0.001;
         this._camera.maxZ = 1000;
         this._camera.lowerRadiusLimit = 1;
         this._camera.upperRadiusLimit = radius;
         this._camera.wheelDeltaPercentage = 0.01; // ??
         this._camera.useNaturalPinchZoom = true;
-        this._camera.attachControl();
 
-        this._camera.useAutoRotationBehavior = this.autoSpin;
-
+        this._camera.onEnabledStateChangedObservable.add(() => {
+            if (this._camera.isEnabled()) {
+                this._camera.useAutoRotationBehavior = this.autoSpin;
+                this._camera.attachControl(); 
+            } else { 
+                this._camera.useAutoRotationBehavior = false;
+                this._camera.detachControl();
+            }
+        });
         scene.activeCamera = this._camera;
-        scene.onActiveCameraChanged.add(() => this._camera.autoRotationBehavior?.resetLastInteractionTime());
+        this._camera.setEnabled(true);
     }
 
     reframe() {
