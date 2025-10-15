@@ -60,10 +60,13 @@ export class MyBabylonElem extends ReactiveElement {
     static override styles = css`
         :host {
             display: block;
+            position: relative;
             background-color: var(--my-background-color, #808080);
         }
 
         canvas {
+            display: block;
+            position: absolute;
             width: 100%;
             height: 100%;
         }
