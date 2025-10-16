@@ -201,10 +201,19 @@ export class MyBabylonElem extends ReactiveElement {
     }
 
     _dragBhv: Nullable<PointerDragBehavior> = null;
+    _dragDist = 0;
     #initDragging() {
         this._dragBhv = new PointerDragBehavior({ dragPlaneNormal: Vector3.Up() });
-        this._dragBhv.onDragStartObservable.add(() => this.ongrabbed(this._dragBhv!.attachedNode as Mesh));
-        this._dragBhv.onDragEndObservable.add(() => this.ondropped(this._dragBhv!.attachedNode as Mesh));
+        this._dragBhv.onDragStartObservable.add(() => {
+            this._dragDist = 0;
+            this.ongrabbed(this._dragBhv!.attachedNode as Mesh)
+        });
+        this._dragBhv.onDragEndObservable.add(() => {
+            this.ondropped(this._dragBhv!.attachedNode as Mesh, this._dragDist);
+        });
+        this._dragBhv.onDragObservable.add((data: {dragDistance: number}) => {
+            this._dragDist += data.dragDistance;
+        });
     }
 
     _highlighter: Nullable<HighlightLayer> = null;
@@ -260,10 +269,11 @@ export class MyBabylonElem extends ReactiveElement {
         bubbleEvent<PickDetail>(this, "babylon.grabbed", { state: "dragging", mesh: mesh.id });
     }
 
-    ondropped(mesh: Mesh) {
+    ondropped(mesh: Mesh, dist: number) {
         assertNonNull(mesh);
+        if (dist == 0) return;
+        this.unpick();
         this.#invalidateCtx();
         bubbleEvent<PickDetail>(this, "babylon.dropped", { state: "dropped", mesh: mesh.id });
-        if (mesh === this._selected) this.unpick();
     }
 }
