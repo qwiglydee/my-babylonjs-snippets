@@ -4,9 +4,7 @@ import { customElement, property, state } from "lit/decorators.js";
 
 import { ArcRotateCamera, ComputeAlpha, ComputeBeta } from "@babylonjs/core/Cameras/arcRotateCamera";
 import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
-import { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
 import { Lerp, Vector3 } from "@babylonjs/core/Maths";
-import { Tags } from "@babylonjs/core/Misc/tags";
 import { Tools } from "@babylonjs/core/Misc/tools";
 import type { Nullable } from "@babylonjs/core/types";
 
@@ -30,17 +28,23 @@ export class MyArcCameraElem extends ReactiveElement {
     @property({ type: Number })
     initBeta = 45;
 
+    /** adjust zoom to fit whole scene when it changes */
     @property({ type: Boolean })
     autoZoom = false;
 
     @property({ type: Number })
     zoomFactor = 1.0;
 
+    /** rotate and zoom towards picked mesh */
     @property({ type: Boolean })
     autoFocus = false;
 
+    /**
+     * focusFactor = 0 -- keep current distance (rotate only)
+     * focusFactor = 1 -- zoom to fit
+     */
     @property({ type: Number })
-    focusFactor = 0.75;
+    focusFactor = 0.5;
 
     @property({ type: Boolean })
     autoSpin = false;
@@ -52,12 +56,10 @@ export class MyArcCameraElem extends ReactiveElement {
     override update(changes: PropertyValues) {
         if (!this.hasUpdated) this.#create();
         else {
-            if ((changes.has("ctx") || changes.has("autoZoom")) && this.autoZoom) {
-                if (this.pick) this.retarget();
-                else this.reframe();
-            }
-            if ((changes.has("pick") || changes.has("autoFocus")) && this.autoFocus) {
-                this.refocus();
+            if ((changes.has("ctx") || changes.has("autoZoom")) && this.autoZoom) this.reframe();
+            if ((changes.has("pick")|| changes.has("autoFocus")) && this.autoFocus) {
+                if (this.pick) this.refocus();
+                else this.reset();
             }
             if (changes.has("autoSpin")) this._camera.useAutoRotationBehavior = this.autoSpin;
         }
@@ -92,45 +94,6 @@ export class MyArcCameraElem extends ReactiveElement {
         this._camera.setEnabled(true);
     }
 
-    /** reset to initial position */
-    reset(params: { alpha?: number; beta?: number; radius?: number; target?: Vector3 } = {}) {
-        assertNonNull(this.ctx);
-        this._camera.autoRotationBehavior?.resetLastInteractionTime();
-        this._camera.target = params.target ?? Vector3.Zero();
-        this._camera.radius = params.radius ?? this.ctx!.size * 0.5;
-        this._camera.alpha = params.alpha ?? Tools.ToRadians(this.initAlpha);
-        this._camera.beta = params.beta ?? Tools.ToRadians(this.initBeta);
-    }
-
-    /** move to best view of picked or model */
-    reframe() {
-        assertNonNull(this.ctx);
-        if (this.pick?.pickedMesh) {
-            const bbox = this.pick.pickedMesh.getBoundingInfo().boundingBox;
-            this._reframe({ min: bbox.minimumWorld, max: bbox.maximumWorld});
-        } else {
-            this._reframe(this.ctx.bounds);
-        }
-    }
-
-    /** move/rotate towards picked or model */
-    refocus() {
-        assertNonNull(this.ctx);
-        if (this.pick?.pickedMesh) 
-            this._refocus(this.pick.pickedMesh.getBoundingInfo().boundingBox);
-        else
-            this._refocus(new BoundingBox(this.ctx.bounds.min, this.ctx.bounds.max));
-    }
-
-    /** rotate towards picked or model center */
-    retarget() {
-        assertNonNull(this.ctx);
-        if (this.pick?.pickedMesh) 
-            this._retarget(this.pick.pickedMesh.getBoundingInfo().boundingBox.centerWorld);
-        else
-            this._retarget(Vector3.Center(this.ctx.bounds.min, this.ctx.bounds.max));
-    }
-
     #adjust(params: { alpha?: number; beta?: number; radius?: number; target?: Vector3 }) {
         this._camera.autoRotationBehavior?.resetLastInteractionTime();
         const alpha = params.alpha ?? this._camera.alpha;
@@ -142,48 +105,38 @@ export class MyArcCameraElem extends ReactiveElement {
         this._camera.interpolateTo(alpha, beta, radius, target);
     }
 
-    /** changing distance to fit bounds */
-    _reframe(bounds: { min: Vector3; max: Vector3 }) {
+    /** move to initial position and best zoom */
+    reset() {
         assertNonNull(this.ctx);
-        debug(this, "reframing", bounds);
-        const radius = this._camera._calculateLowerRadiusFromModelBoundingSphere(bounds.min, bounds.max, this.zoomFactor);
-        this.#adjust({
-            target: Vector3.Center(bounds.min, bounds.max),
-            radius,
-        });
+        const target = Vector3.Center(this.ctx.bounds.min, this.ctx.bounds.max);
+        const radius = this._camera._calculateLowerRadiusFromModelBoundingSphere(this.ctx.bounds.min, this.ctx.bounds.max);
+        const alpha = Tools.ToRadians(this.initAlpha);
+        const beta = Tools.ToRadians(this.initBeta); 
+        debug(this, "resetting");
+        this.#adjust({target, radius, alpha, beta});
     }
 
-    /** rotating to target, keeping current position */
-    _retarget(target: Vector3, distance?: number) {
-        const vector = this._camera.position.subtract(target);
-        const radius = distance ?? vector.length();
-        debug(this, "retargeting", { target, distance });
-        this.#adjust({
-            target,
-            radius,
-            alpha: ComputeAlpha(vector),
-            beta: ComputeBeta(vector.y, radius),
-        });
+    /** zoom to fit all scene (keep angle) */
+    reframe() {
+        assertNonNull(this.ctx);
+        const radius = this._camera._calculateLowerRadiusFromModelBoundingSphere(this.ctx.bounds.min, this.ctx.bounds.max, this.zoomFactor);
+        debug(this, "reframing");
+        this.#adjust({ radius });
     }
 
-    /** rotating to target and ajusting distance, keeping current position
-     * this.focusFactor == 0 -- not moving
-     * this.focusFactor == 1 -- moving to best distance
-     */
-    _refocus(bbox: BoundingBox) {
-        debug(this, "refocusing", { focus, name: focus.name });
-
+    /** move/rotate towards picked for best view */
+    refocus() {
+        assertNonNull(this.ctx);
+        assertNonNull(this.pick?.pickedMesh) 
+        const bbox = this.pick.pickedMesh.getBoundingInfo().boundingBox;
         const target = bbox.centerWorld;
         const vector = this._camera.position.subtract(target);
         const dist = vector.length();
-        const best = this._camera._calculateLowerRadiusFromModelBoundingSphere(bbox.minimumWorld, bbox.maximumWorld, this.zoomFactor);
+        const best = this._camera._calculateLowerRadiusFromModelBoundingSphere(bbox.minimumWorld, bbox.maximumWorld);
         const radius = Lerp(dist, best, this.focusFactor); 
-
-        this.#adjust({
-            target,
-            radius,
-            alpha: ComputeAlpha(vector),
-            beta: ComputeBeta(vector.y, radius),
-        });
+        const alpha = ComputeAlpha(vector);
+        const beta = ComputeBeta(vector.y, radius)  
+        debug(this, "refocusing");
+        this.#adjust({target, radius, alpha, beta});
     }
 }
