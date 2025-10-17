@@ -18,7 +18,7 @@ import type { Nullable } from "@babylonjs/core/types";
 import { sceneCtx, pickCtx, utilsCtx, type SceneCtx, type PickDetail } from "./context";
 import { MyScene } from "./scene";
 import { assertNonNull } from "./utils/asserts";
-import { debug } from "./utils/debug";
+import { debug, debugChanges } from "./utils/debug";
 import { bubbleEvent } from "./utils/events";
 import type { Scene } from "@babylonjs/core/scene";
 
@@ -142,6 +142,7 @@ export class MyBabylonElem extends ReactiveElement {
     _ctx_dirty = true;
 
     #invalidateCtx() {
+        debug(this, `CTX ...`);
         this._ctx_dirty = true;
     }
 
@@ -150,9 +151,9 @@ export class MyBabylonElem extends ReactiveElement {
         if (!this._ctx_dirty) return;
         await this.scene.whenReadyAsync(true);
         this.ctx = {
-            worldSize: this.worldSize,
             scene: this.scene,
-            bounds: this.scene.getModelExtends(),
+            world: this.scene.getWorldBounds(),
+            bounds: this.scene.getModelBounds(),
         };
         this._ctx_dirty = false;
         debug(this, `CTX ==`, this.ctx);
@@ -180,7 +181,7 @@ export class MyBabylonElem extends ReactiveElement {
     #init() {
         debug(this, "initializing");
         this.engine = new Engine(this.canvas, undefined, ENGOPTIONS);
-        this.scene = new MyScene(this.engine);
+        this.scene = new MyScene(this.engine, Vector3.One().scale(this.worldSize));
         this.scene.useRightHandedSystem = this.rightHanded;
         this.scene.clearColor = Color4.FromHexString(getComputedStyle(this).getPropertyValue("--my-background-color"));
         this.utils = new UtilityLayerRenderer(this.scene, false, false).utilityLayerScene;
@@ -188,7 +189,7 @@ export class MyBabylonElem extends ReactiveElement {
         this.scene.onModelUpdatedObservable.add(() => this.#invalidateCtx());
 
         new AxesViewer(this.utils);
-        this.#refreshCtx();
+        // this.#refreshCtx();
     }
 
     #initPicking() {
@@ -229,7 +230,8 @@ export class MyBabylonElem extends ReactiveElement {
     }
 
     override update(changes: PropertyValues) {
-        if (changes.has("_ctx_dirty")) this.#refreshCtx();
+        debugChanges(this, "updating", changes);
+        if (changes.has("_ctx_dirty") && this._ctx_dirty) this.#refreshCtx();
         super.update(changes);
     }
 

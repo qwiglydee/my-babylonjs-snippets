@@ -5,7 +5,7 @@ import { customElement, property } from "lit/decorators.js";
 import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
 import { KeyboardEventTypes, type KeyboardInfo } from "@babylonjs/core/Events/keyboardEvents";
 import { PBRMetallicRoughnessMaterial } from "@babylonjs/core/Materials/PBR/pbrMetallicRoughnessMaterial";
-import { Vector3 } from "@babylonjs/core/Maths";
+import { Vector2, Vector3 } from "@babylonjs/core/Maths";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import type { Nullable } from "@babylonjs/core/types";
@@ -47,7 +47,7 @@ export class MyStuffElem extends ReactiveElement {
     }
 
     #randomLoc() {
-        const radius = this.radius ?? this.ctx!.worldSize * 0.5;
+        const radius = this.radius ?? Math.min(this.ctx!.scene.worldSize.x, this.ctx!.scene.worldSize.z) * 0.5;
 
         const rndc = () => (Math.random() * 2 - 1) * radius;
         const snap = (coord: number) => this.size * (0.5 + Math.floor(coord / this.size));
@@ -105,10 +105,9 @@ export class MyStuffElem extends ReactiveElement {
             if (info.type != KeyboardEventTypes.KEYDOWN && "gsr".includes(info.event.key)) {
                 switch (info.event.key) {
                     case "g":
-                        const radius = this.radius ?? this.ctx!.worldSize * 0.5;
-                        selected.position.x = (Math.random() * 2 - 1) * radius;
-                        selected.position.z = (Math.random() * 2 - 1) * radius;
-
+                        const ext = this.radius ? Vector3.One().scale(this.radius) : this.ctx!.world.extendSize;
+                        selected.position.x = (Math.random() * 2 - 1) * ext.x;
+                        selected.position.z = (Math.random() * 2 - 1) * ext.z;
                         break;
                     case "s":
                         selected.scaling.x = (Math.random() * 0.75 + 0.25) * this.size;

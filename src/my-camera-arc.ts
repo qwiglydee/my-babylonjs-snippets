@@ -50,7 +50,7 @@ export class MyArcCameraElem extends ReactiveElement {
     #create() {
         debug(this, "creating");
         const scene = this.ctx!.scene;
-        const radius = 0.5 * this.ctx!.worldSize;
+        const radius = this.ctx!.scene.worldSize.length() * 0.5;
         this._camera = new ArcRotateCamera("(Camera)", Tools.ToRadians(this.initAlpha), Tools.ToRadians(this.initBeta), radius, Vector3.Zero(), scene);
         this._camera.setEnabled(false);
         this._camera.minZ = 0.001;
@@ -77,8 +77,15 @@ export class MyArcCameraElem extends ReactiveElement {
         debug(this, "reframing", this.ctx?.bounds);
         assertNonNull(this.ctx);
         this._camera.autoRotationBehavior?.resetLastInteractionTime();
-        const distance = this._camera._calculateLowerRadiusFromModelBoundingSphere(this.ctx.bounds.min, this.ctx.bounds.max, this.zoomFactor);
-        this._camera.radius = distance;
-        this._camera.focusOn({ ...this.ctx.bounds, distance }, true);
+
+        if (this.ctx.bounds) {
+            const distance = this._camera._calculateLowerRadiusFromModelBoundingSphere(this.ctx.bounds.minimum, this.ctx.bounds.maximum, this.zoomFactor);
+            this._camera.radius = distance;
+            this._camera.focusOn({ min: this.ctx.bounds.minimum, max: this.ctx.bounds.maximum, distance }, true);
+        } else {
+            this._camera.radius = this.ctx.world.extendSize.length();
+            this._camera.alpha = Tools.ToRadians(this.initAlpha);
+            this._camera.beta = Tools.ToRadians(this.initBeta);
+        }
     }
 }

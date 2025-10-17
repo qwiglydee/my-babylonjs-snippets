@@ -1,10 +1,10 @@
 import { createContext } from "@lit/context";
 
 import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
-import type { Vector3 } from "@babylonjs/core/Maths";
 import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
 import type { MyScene } from "./scene";
+import type { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
 
 export interface AppCtx {
     status: string;
@@ -16,9 +16,9 @@ export const appCtx = createContext<AppCtx>(Symbol('app'));
 
 
 export interface SceneCtx {
-    worldSize: number;
     scene: MyScene;
-    bounds: { min: Vector3, max: Vector3 }
+    world: BoundingBox;
+    bounds: Nullable<BoundingBox>;
 }
 
 export const sceneCtx = createContext<Nullable<SceneCtx>>(Symbol('babylon.scene'));
