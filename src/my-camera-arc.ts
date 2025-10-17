@@ -16,7 +16,7 @@ import { debug } from "./utils/debug";
 export class MyArcCameraElem extends ReactiveElement {
     @consume({ context: sceneCtx, subscribe: true })
     @state()
-    ctx: Nullable<SceneCtx> = null;
+    ctx!: SceneCtx;
 
     @consume({ context: pickCtx, subscribe: true })
     @state()
@@ -69,8 +69,8 @@ export class MyArcCameraElem extends ReactiveElement {
 
     #init() {
         debug(this, "initializing");
-        const scene = this.ctx!.scene;
-        const radius = 0.5 * this.ctx!.worldSize;
+        const scene = this.ctx.scene;
+        const radius = this.ctx.world.extendSize.length();
         this._camera = new ArcRotateCamera("(Camera)", Tools.ToRadians(this.initAlpha), Tools.ToRadians(this.initBeta), radius, Vector3.Zero(), scene);
         this._camera.setEnabled(false);
         this._camera.minZ = 0.001;
@@ -93,9 +93,14 @@ export class MyArcCameraElem extends ReactiveElement {
 
     /** move to initial position and best zoom */
     reset() {
-        assertNonNull(this.ctx);
-        const target = Vector3.Center(this.ctx.bounds.min, this.ctx.bounds.max);
-        const radius = this._camera._calculateLowerRadiusFromModelBoundingSphere(this.ctx.bounds.min, this.ctx.bounds.max);
+        let target: Vector3, radius: number;
+        if (this.ctx.bounds) {
+            target = this.ctx.bounds.center;
+            radius = this._camera._calculateLowerRadiusFromModelBoundingSphere(this.ctx.bounds.minimum, this.ctx.bounds.maximum);
+        } else {
+            target = Vector3.Zero();
+            radius = this.ctx.world.extendSize.length();
+        }
         const alpha = Tools.ToRadians(this.initAlpha);
         const beta = Tools.ToRadians(this.initBeta); 
         debug(this, "resetting");
@@ -104,15 +109,18 @@ export class MyArcCameraElem extends ReactiveElement {
 
     /** zoom to fit all scene (keep angle) */
     reframe() {
-        assertNonNull(this.ctx);
-        const radius = this._camera._calculateLowerRadiusFromModelBoundingSphere(this.ctx.bounds.min, this.ctx.bounds.max, this.zoomFactor);
+        let radius: number;
+        if (this.ctx.bounds) {
+            radius = this._camera._calculateLowerRadiusFromModelBoundingSphere(this.ctx.bounds.minimum, this.ctx.bounds.maximum, this.zoomFactor);
+        } else {
+            radius = this.ctx.world.extendSize.length();
+        }
         debug(this, "reframing");
         this.#adjust({ radius });
     }
 
     /** move/rotate towards picked for best view */
     refocus() {
-        assertNonNull(this.ctx);
         assertNonNull(this.pick?.pickedMesh) 
         const bbox = this.pick.pickedMesh.getBoundingInfo().boundingBox;
         const target = bbox.centerWorld;
