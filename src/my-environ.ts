@@ -84,7 +84,7 @@ export class MyEnvironElem extends ReactiveElement {
         this._skyMat.reflectionBlur = this.skyBlur;
 
         this._skyBox = CreateBox("(SkyBox)", { size: 1, sideOrientation: Mesh.BACKSIDE }, scene);
-        this._skyBox.scaling.copyFrom(this.ctx!.scene.worldSize);
+        this._skyBox.scaling = this.ctx!.scene.worldSize.scale(2);
         this._skyBox.isPickable = false;
         this._skyBox.material = this._skyMat;
         this._skyBox.infiniteDistance = true;
