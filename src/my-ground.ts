@@ -24,6 +24,10 @@ export class MyGroundElem extends ReactiveElement {
     @consume({ context: utilsCtx, subscribe: false })
     utils!: Scene;
 
+    /** use primary scene instead of utils */
+    @property({ type: Boolean })
+    real = false;
+
     @property({ type: Number })
     defaultSize: number = 100;
 
@@ -47,23 +51,24 @@ export class MyGroundElem extends ReactiveElement {
         this.#init();
     }
 
-    _mesh!: Mesh;
-    _mtl!: GridMaterial;
+    _ground!: Mesh;
+    _material!: GridMaterial;
 
     #init() {
         debug(this, "initilizing");
         assertNonNull(this.ctx);
-        const scene = this.utils;
+        const scene = this.real ? this.ctx.scene : this.utils;
 
-        this._mesh = CreateGround("(Ground)", { width: 1.0, height: 1.0, subdivisions: 1 }, scene);
-        this._mesh.isPickable = false;
+        this._material = new GridMaterial("(Ground)", scene);
+        this._material.majorUnitFrequency = 8;
+        this._material.backFaceCulling = false;
+        this._material.opacityTexture = new Texture(GROUND_TXT.href, scene);
 
-        this._mtl = new GridMaterial("(Ground)", scene);
-        this._mtl.majorUnitFrequency = 8;
-        this._mtl.backFaceCulling = false;
-        this._mtl.opacityTexture = new Texture(GROUND_TXT.href, scene);
 
-        this._mesh.material = this._mtl;
+        this._ground = CreateGround("(Ground)", { width: 1.0, height: 1.0, subdivisions: 1 }, scene);
+        if (this.real) this.ctx.scene.markAux(this._ground);
+        this._ground.isPickable = false;
+        this._ground.material = this._material;
 
         this._size = this.defaultSize;
     }
@@ -74,9 +79,9 @@ export class MyGroundElem extends ReactiveElement {
 
     #resize() {
         debug(this, "resizing", { size: this._size });
-        this._mesh.scaling.x = this._size;
-        this._mesh.scaling.z = this._size;
-        this._mtl.gridRatio = 1 / this._size;
+        this._ground.scaling.x = this._size;
+        this._ground.scaling.z = this._size;
+        this._material.gridRatio = 1 / this._size;
     }
 
     override update(changes: PropertyValues) {
@@ -85,12 +90,12 @@ export class MyGroundElem extends ReactiveElement {
         
         if (changes.has("_size")) this.#resize();
 
-        if (changes.has("opacity")) this._mtl.opacity = this.opacity;
+        if (changes.has("opacity")) this._material.opacity = this.opacity;
 
-        if (changes.has("opacity2")) this._mtl.minorUnitVisibility = this.opacity2;
+        if (changes.has("opacity2")) this._material.minorUnitVisibility = this.opacity2;
 
         if (changes.has("color")) {
-            this._mtl.lineColor = Color3.FromHexString(this.color);
+            this._material.lineColor = Color3.FromHexString(this.color);
         }
         super.update(changes);
     }
