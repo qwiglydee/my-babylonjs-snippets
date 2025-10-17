@@ -3,16 +3,15 @@ import { ReactiveElement, type PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
 import { Texture } from "@babylonjs/core/Materials/Textures/texture";
-import { Color3 } from "@babylonjs/core/Maths";
+import { Color3, Vector2, Vector3 } from "@babylonjs/core/Maths";
 import { CreateGround } from "@babylonjs/core/Meshes/Builders/groundBuilder";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
-import type { Nullable } from "@babylonjs/core/types";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
 
 import { sceneCtx, utilsCtx, type SceneCtx } from "./context";
 import { assertNonNull } from "./utils/asserts";
-import { debug, debugChanges } from "./utils/debug";
+import { debug } from "./utils/debug";
 
 const GROUND_TXT = new URL("./assets/ground.png?inline", import.meta.url);
 
@@ -25,8 +24,12 @@ export class MyGroundElem extends ReactiveElement {
     @consume({ context: utilsCtx, subscribe: false })
     utils!: Scene;
 
+    /** use primary scene instead of utils */
+    @property({ type: Boolean })
+    real = false;
+
     @property({ type: Number })
-    size: Nullable<number> = null;
+    defaultSize: number = 100;
 
     @property({ type: Boolean })
     autoSize = false;
@@ -48,62 +51,51 @@ export class MyGroundElem extends ReactiveElement {
         this.#init();
     }
 
-    _mesh!: Mesh;
-    _mtl!: GridMaterial;
+    _ground!: Mesh;
+    _material!: GridMaterial;
 
     #init() {
         debug(this, "initilizing");
         assertNonNull(this.ctx);
-        const scene = this.utils;
+        const scene = this.real ? this.ctx.scene : this.utils;
 
-        this._mesh = CreateGround("(Ground)", { width: 1.0, height: 1.0, subdivisions: 1 }, scene);
-        this._mesh.isPickable = false;
+        this._material = new GridMaterial("(Ground)", scene);
+        this._material.majorUnitFrequency = 8;
+        this._material.backFaceCulling = false;
+        this._material.opacityTexture = new Texture(GROUND_TXT.href, scene);
 
-        this._mtl = new GridMaterial("(Ground)", scene);
-        this._mtl.majorUnitFrequency = 8;
-        this._mtl.backFaceCulling = false;
-        this._mtl.opacityTexture = new Texture(GROUND_TXT.href, scene);
 
-        this._mesh.material = this._mtl;
+        this._ground = CreateGround("(Ground)", { width: 1.0, height: 1.0, subdivisions: 1 }, scene);
+        if (this.real) this.ctx.scene.markAux(this._ground);
+        this._ground.isPickable = false;
+        this._ground.material = this._material;
 
-        this._size = this.size ?? this.#calcSize();
+        this._size = this.defaultSize;
     }
 
     #calcSize() {
-        assertNonNull(this.ctx);
-        if (this.ctx.bounds) {
-            return 3 * Math.max(
-                Math.abs(this.ctx.bounds.minimum.x), 
-                Math.abs(this.ctx.bounds.minimum.z), 
-                Math.abs(this.ctx.bounds.maximum.x), 
-                Math.abs(this.ctx.bounds.maximum.z), 
-            )
-        } else {
-            return 2 * Math.max(this.ctx.scene.worldSize.x, this.ctx.scene.worldSize.z);
-        }
+        return this.ctx.world ? 2 * (new Vector2(this.ctx.world.extendSize.x, this.ctx.world.extendSize.z)).length() : this.defaultSize;
     }
 
     #resize() {
         debug(this, "resizing", { size: this._size });
-        this._mesh.scaling.x = this._size;
-        this._mesh.scaling.z = this._size;
-        this._mtl.gridRatio = 1 / this._size;
+        this._ground.scaling.x = this._size;
+        this._ground.scaling.z = this._size;
+        this._material.gridRatio = 1 / this._size;
     }
 
-
     override update(changes: PropertyValues) {
-        if ((changes.has("ctx") || changes.has("autoSize")) && this.autoSize) this._size = this.#calcSize();
-
-        if (changes.has("size") && this.size) this._size = this.size;
-
+        if (this.autoSize && (changes.has("ctx") || changes.has("autoSize"))) this._size = this.#calcSize();
+        if (!this.autoSize && changes.has('defaultSize')) this._size = this.defaultSize;
+        
         if (changes.has("_size")) this.#resize();
 
-        if (changes.has("opacity")) this._mtl.opacity = this.opacity;
+        if (changes.has("opacity")) this._material.opacity = this.opacity;
 
-        if (changes.has("opacity2")) this._mtl.minorUnitVisibility = this.opacity2;
+        if (changes.has("opacity2")) this._material.minorUnitVisibility = this.opacity2;
 
         if (changes.has("color")) {
-            this._mtl.lineColor = Color3.FromHexString(this.color);
+            this._material.lineColor = Color3.FromHexString(this.color);
         }
         super.update(changes);
     }

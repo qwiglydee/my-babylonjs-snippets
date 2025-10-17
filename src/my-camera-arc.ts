@@ -22,12 +22,6 @@ export class MyArcCameraElem extends ReactiveElement {
     @state()
     pick: Nullable<PickingInfo> = null;
 
-    @property({ type: Number })
-    initAlpha = 45;
-
-    @property({ type: Number })
-    initBeta = 45;
-
     /** adjust zoom to fit whole scene when it changes */
     @property({ type: Boolean })
     autoZoom = false;
@@ -48,6 +42,19 @@ export class MyArcCameraElem extends ReactiveElement {
 
     @property({ type: Boolean })
     autoSpin = false;
+
+    /**
+     * focusFactor = 0 -- keep current distance (rotate only)
+     * focusFactor = 1 -- zoom to fit
+     */
+    @property({ type: Number })
+    defaultAlpha: number = 45;
+
+    @property({ type: Number })
+    defaultBeta: number = 45;
+
+    @property({ type: Number })
+    defaultRadius: number = 45;
 
     override connectedCallback(): void {
         super.connectedCallback();
@@ -70,13 +77,13 @@ export class MyArcCameraElem extends ReactiveElement {
     #init() {
         debug(this, "initializing");
         const scene = this.ctx.scene;
-        const radius = this.ctx.world.extendSize.length();
-        this._camera = new ArcRotateCamera("(Camera)", Tools.ToRadians(this.initAlpha), Tools.ToRadians(this.initBeta), radius, Vector3.Zero(), scene);
+        const radius = this.defaultRadius;
+        this._camera = new ArcRotateCamera("(Camera)", Tools.ToRadians(this.defaultAlpha), Tools.ToRadians(this.defaultBeta), radius, Vector3.Zero(), scene);
         this._camera.setEnabled(false);
         this._camera.minZ = 0.001;
         this._camera.maxZ = 1000;
-        this._camera.lowerRadiusLimit = 1;
-        this._camera.upperRadiusLimit = radius;
+        this._camera.lowerRadiusLimit = 0.5 * radius;
+        this._camera.upperRadiusLimit = 2.0 * radius;
         this._camera.wheelDeltaPercentage = 0.01; // ??
         this._camera.useNaturalPinchZoom = true;
     }
@@ -87,7 +94,8 @@ export class MyArcCameraElem extends ReactiveElement {
         const beta = params.beta ?? this._camera.beta;
         const radius = params.radius ?? this._camera.radius;
         const target = params.target ?? this._camera.target;
-        this._camera.lowerRadiusLimit = radius * 0.5;
+        this._camera.lowerRadiusLimit = 0.5 * radius;
+        this._camera.upperRadiusLimit = 2.0 * radius;
         this._camera.interpolateTo(alpha, beta, radius, target);
     }
 
@@ -99,10 +107,10 @@ export class MyArcCameraElem extends ReactiveElement {
             radius = this._camera._calculateLowerRadiusFromModelBoundingSphere(this.ctx.bounds.minimum, this.ctx.bounds.maximum);
         } else {
             target = Vector3.Zero();
-            radius = this.ctx.world.extendSize.length();
+            radius = this.defaultRadius
         }
-        const alpha = Tools.ToRadians(this.initAlpha);
-        const beta = Tools.ToRadians(this.initBeta); 
+        const alpha = Tools.ToRadians(this.defaultAlpha);
+        const beta = Tools.ToRadians(this.defaultBeta); 
         debug(this, "resetting");
         this.#adjust({target, radius, alpha, beta});
     }
@@ -110,10 +118,10 @@ export class MyArcCameraElem extends ReactiveElement {
     /** zoom to fit all scene (keep angle) */
     reframe() {
         let radius: number;
-        if (this.ctx.bounds) {
-            radius = this._camera._calculateLowerRadiusFromModelBoundingSphere(this.ctx.bounds.minimum, this.ctx.bounds.maximum, this.zoomFactor);
+        if (this.ctx.world) {
+            radius = this._camera._calculateLowerRadiusFromModelBoundingSphere(this.ctx.world.minimum, this.ctx.world.maximum, this.zoomFactor);
         } else {
-            radius = this.ctx.world.extendSize.length();
+            radius = this.defaultRadius
         }
         debug(this, "reframing");
         this.#adjust({ radius });
@@ -126,7 +134,7 @@ export class MyArcCameraElem extends ReactiveElement {
         const target = bbox.centerWorld;
         const vector = this._camera.position.subtract(target);
         const dist = vector.length();
-        const best = this._camera._calculateLowerRadiusFromModelBoundingSphere(bbox.minimumWorld, bbox.maximumWorld);
+        const best = this._camera._calculateLowerRadiusFromModelBoundingSphere(bbox.minimumWorld, bbox.maximumWorld, this.zoomFactor);
         const radius = Lerp(dist, best, this.focusFactor); 
         const alpha = ComputeAlpha(vector);
         const beta = ComputeBeta(vector.y, radius)  

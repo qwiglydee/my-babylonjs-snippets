@@ -23,7 +23,7 @@ export class MyStuffElem extends ReactiveElement {
     pick: Nullable<PickingInfo> = null;
 
     @property({ type: Number })
-    radius: Nullable<number> = null;
+    radius = 10;
 
     @property({ type: Number })
     size = 1;
@@ -49,9 +49,8 @@ export class MyStuffElem extends ReactiveElement {
             if (info.type != KeyboardEventTypes.KEYDOWN && "gsr".includes(info.event.key)) {
                 switch (info.event.key) {
                     case "g":
-                        const ext = this.radius ? Vector3.One().scale(this.radius) : this.ctx!.world.extendSize;
-                        selected.position.x = (Math.random() * 2 - 1) * ext.x;
-                        selected.position.z = (Math.random() * 2 - 1) * ext.z;
+                        selected.position.x = (Math.random() * 2 - 1) * this.radius;
+                        selected.position.z = (Math.random() * 2 - 1) * this.radius;
                         break;
                     case "s":
                         selected.scaling.x = (Math.random() * 0.75 + 0.25) * this.size;
@@ -62,15 +61,13 @@ export class MyStuffElem extends ReactiveElement {
                         selected.rotation.x = (Math.random() * 2 + 1) * Math.PI;
                         break;
                 }
+                scene.onModelUpdatedObservable.notifyObservers([selected]);
             }
-            scene.onModelUpdatedObservable.notifyObservers([selected]);
         });
     }
 
     #randomLoc() {
-        const radius = this.radius ?? Math.min(this.ctx!.scene.worldSize.x, this.ctx!.scene.worldSize.z) * 0.5;
-
-        const rndc = () => (Math.random() * 2 - 1) * radius;
+        const rndc = () => (Math.random() * 2 - 1) * this.radius;
         const snap = (coord: number) => this.size * (0.5 + Math.floor(coord / this.size));
 
         return new Vector3(snap(rndc()), 0.5 * this.size, snap(rndc()));

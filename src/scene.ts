@@ -1,6 +1,6 @@
 import { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
 import type { Engine } from "@babylonjs/core/Engines/engine";
-import type { Vector3 } from "@babylonjs/core/Maths";
+import { Vector3 } from "@babylonjs/core/Maths";
 import type { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
 import type { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import { Observable } from "@babylonjs/core/Misc/observable";
@@ -13,16 +13,11 @@ const SCNOPTIONS: SceneOptions = {};
 
 
 export class MyScene extends Scene {
-    worldSize: Vector3;
-    _worldBounds: BoundingBox;
-
     // observe when something added/removed or moved around
     onModelUpdatedObservable: Observable<AbstractMesh[]> = new Observable();
 
-    constructor(engine: Engine, worldSize: Vector3) {
+    constructor(engine: Engine) {
         super(engine, SCNOPTIONS);
-        this.worldSize = worldSize;
-        this._worldBounds = new BoundingBox(this.worldSize.scale(-0.5), this.worldSize.scale(+0.5));
         this.onNewMeshAddedObservable.add(this.#maybeupdate);
         this.onMeshRemovedObservable.add(this.#maybeupdate);
     }
@@ -37,14 +32,31 @@ export class MyScene extends Scene {
         if (this.#nonAuxFilter(mesh)) this.onModelUpdatedObservable.notifyObservers([mesh]);
     };
 
-    getWorldBounds(): BoundingBox {
-        return this._worldBounds;
-    }
-
+    /** bounding box of all model meshes */
     getModelBounds(): Nullable<BoundingBox> {
         const stuff = this.meshes.filter(this.#nonAuxFilter);
         if (!stuff.length) return null;
         const ext = this.getWorldExtends(this.#nonAuxFilter);
         return new BoundingBox(ext.min, ext.max);
     }
+
+    /** possible bunding box of scene flipped around 0 */
+    getWorldBounds(): Nullable<BoundingBox> {
+        const stuff = this.meshes.filter(this.#nonAuxFilter);
+        if (!stuff.length) return null;
+        const ext = this.getWorldExtends(this.#nonAuxFilter);
+        const flp = { min: ext.min.scale(-1), max: ext.max.scale(-1)};
+        return new BoundingBox(
+            new Vector3(
+                Math.min(ext.min.x, flp.min.x, ext.max.x, flp.max.x),
+                Math.min(ext.min.y, flp.min.y, ext.max.y, flp.max.y),
+                Math.min(ext.min.z, flp.min.z, ext.max.z, flp.max.z)
+            ),
+            new Vector3(
+                Math.max(ext.min.x, flp.min.x, ext.max.x, flp.max.x),
+                Math.max(ext.min.y, flp.min.y, ext.max.y, flp.max.y),
+                Math.max(ext.min.z, flp.min.z, ext.max.z, flp.max.z)
+            ),
+        );
+    }   
 }

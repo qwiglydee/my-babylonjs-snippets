@@ -18,8 +18,8 @@ export const appCtx = createContext<AppCtx>(Symbol('app'));
 
 export interface SceneCtx {
     scene: MyScene;
-    world: BoundingBox;
     bounds: Nullable<BoundingBox>;
+    world: Nullable<BoundingBox>;
 }
 
 export const sceneCtx = createContext<SceneCtx>(Symbol('babylon.scene'));
