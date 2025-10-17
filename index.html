@@ -53,12 +53,11 @@
 
     <body class="container bg-light">
         <our-app class="p-0 border rounded-3">
-            <my-babylon worldSize="16" picking dragging highlighting>
+            <my-babylon picking dragging highlighting>
                 <my-camera-arc autoSpin autoZoom autoFocus focusFactor="0.5"></my-camera-arc>
                 <my-environ sky skyIntens="0.1" skyBlur="0.75"></my-environ>
                 <my-ground autoSize></my-ground>
                 <my-stuff radius="4" count="3" shuffling></my-stuff>
-                <my-something></my-something>
 
                 <div slot="overlay" style="position: absolute; top: 4px; left: 4px">
                     <!-- https://fonts.google.com/icons -->
@@ -112,6 +111,8 @@
             my.babylon.addEventListener("babylon.dropped", function (e) {
                 console.debug(e.type, e.detail);
             });
+
+            setTimeout(() => my.stuff.createItem(), 3000);
         </script>
 
         <script type="module">

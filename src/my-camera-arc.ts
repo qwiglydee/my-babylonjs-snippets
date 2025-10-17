@@ -31,19 +31,23 @@ export class MyArcCameraElem extends ReactiveElement {
     @property({ type: Number })
     initBeta: number = 45;
 
-    override update(changes: PropertyValues) {
-        if (!this.hasUpdated) this.#create();
-        else {
-            if ((changes.has("ctx") || changes.has("autoZoom")) && this.autoZoom) this.reframe();
-            if (changes.has("autoSpin")) this._camera.useAutoRotationBehavior = this.autoSpin;
-        }
-        super.update(changes);
+    override connectedCallback(): void {
+        super.connectedCallback();
+        this.#init();
+        this._camera.onEnabledStateChangedObservable.add(() => {
+            if (this._camera.isEnabled()) {
+                this._camera.useAutoRotationBehavior = this.autoSpin;
+                this._camera.attachControl(); 
+            } else { 
+                this._camera.useAutoRotationBehavior = false;
+                this._camera.detachControl();
+            }
+        });
+        this._camera.setEnabled(true);
     }
 
-    _camera!: ArcRotateCamera;
-
-    #create() {
-        debug(this, "creating");
+    #init() {
+        debug(this, "initializing");
         const scene = this.ctx!.scene;
         const radius = this.ctx!.scene.worldSize.length() * 0.5;
         this._camera = new ArcRotateCamera("(Camera)", Tools.ToRadians(this.initAlpha), Tools.ToRadians(this.initBeta), radius, Vector3.Zero(), scene);
@@ -54,19 +58,16 @@ export class MyArcCameraElem extends ReactiveElement {
         this._camera.upperRadiusLimit = radius;
         this._camera.wheelDeltaPercentage = 0.01; // ??
         this._camera.useNaturalPinchZoom = true;
-
-        this._camera.onEnabledStateChangedObservable.add(() => {
-            if (this._camera.isEnabled()) {
-                this._camera.useAutoRotationBehavior = this.autoSpin;
-                this._camera.attachControl(); 
-            } else { 
-                this._camera.useAutoRotationBehavior = false;
-                this._camera.detachControl();
-            }
-        });
         scene.activeCamera = this._camera;
-        this._camera.setEnabled(true);
     }
+
+    override update(changes: PropertyValues) {
+        if ((changes.has("ctx") || changes.has("autoZoom")) && this.autoZoom) this.reframe();
+        if (changes.has("autoSpin")) this._camera.useAutoRotationBehavior = this.autoSpin;
+        super.update(changes);
+    }
+
+    _camera!: ArcRotateCamera;
 
     reframe() {
         debug(this, "reframing", this.ctx?.bounds);

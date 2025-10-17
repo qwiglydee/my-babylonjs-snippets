@@ -20,7 +20,7 @@ import { pickCtx, sceneCtx, utilsCtx, type PickDetail, type SceneCtx } from "./c
 import { MyScene } from "./scene";
 import { assertNonNull } from "./utils/asserts";
 import { debug } from "./utils/debug";
-import { bubbleEvent, queueEvent } from "./utils/events";
+import { queueEvent } from "./utils/events";
 
 const ENGOPTIONS: EngineOptions = {
     antialias: true,
@@ -168,8 +168,15 @@ export class MyBabylonElem extends ReactiveElement {
         if (this.picking) this.#initPicking();
         if (this.dragging) this.#initDragging();
         if (this.highlighting) this.#initHighlighting();
+        this.scene.onModelUpdatedObservable.add(() => this.#invalidateCtx());
         this.#resizingObs.observe(this);
         this.#visibilityObs.observe(this);
+        // NB: initial scene is not ready yet but it's empty anyway
+        this.ctx = {
+            scene: this.scene,
+            world: this.scene.getWorldBounds(),
+            bounds: null,
+        }
     }
 
     override disconnectedCallback(): void {
@@ -186,16 +193,7 @@ export class MyBabylonElem extends ReactiveElement {
         this.scene.useRightHandedSystem = this.rightHanded;
         this.scene.clearColor = Color4.FromHexString(getComputedStyle(this).getPropertyValue("--my-background-color"));
         this.utils = new UtilityLayerRenderer(this.scene, false, false).utilityLayerScene;
-
-        this.scene.onModelUpdatedObservable.add(() => this.#invalidateCtx());
-
         new AxesViewer(this.utils);
-        // NB: initial ctx scene is not ready yet but it's empty
-        this.ctx = {
-            scene: this.scene,
-            world: this.scene.getWorldBounds(),
-            bounds: null,
-        }
     }
 
     #initPicking() {

@@ -23,11 +23,8 @@ export class MyScene extends Scene {
         super(engine, SCNOPTIONS);
         this.worldSize = worldSize;
         this._worldBounds = new BoundingBox(this.worldSize.scale(-0.5), this.worldSize.scale(+0.5));
-        const maybeupd = (mesh: AbstractMesh) => { 
-            if (this.#nonAuxFilter(mesh)) this.onModelUpdatedObservable.notifyObservers([mesh]);
-        };
-        this.onNewMeshAddedObservable.add(maybeupd);
-        this.onMeshRemovedObservable.add(maybeupd);
+        this.onNewMeshAddedObservable.add(this.#maybeupdate);
+        this.onMeshRemovedObservable.add(this.#maybeupdate);
     }
 
     markAux(node: TransformNode) {
@@ -35,6 +32,10 @@ export class MyScene extends Scene {
     }
     
     #nonAuxFilter = (n: TransformNode) => Tags.MatchesQuery(n, "!aux");
+
+    #maybeupdate = (mesh: AbstractMesh) => { 
+        if (this.#nonAuxFilter(mesh)) this.onModelUpdatedObservable.notifyObservers([mesh]);
+    };
 
     getWorldBounds(): BoundingBox {
         return this._worldBounds;

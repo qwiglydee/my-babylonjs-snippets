@@ -1,11 +1,11 @@
 import { consume } from "@lit/context";
-import { ReactiveElement, type PropertyValues } from "lit";
+import { ReactiveElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
 import { KeyboardEventTypes, type KeyboardInfo } from "@babylonjs/core/Events/keyboardEvents";
 import { PBRMetallicRoughnessMaterial } from "@babylonjs/core/Materials/PBR/pbrMetallicRoughnessMaterial";
-import { Vector2, Vector3 } from "@babylonjs/core/Maths";
+import { Vector3 } from "@babylonjs/core/Maths";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import type { Nullable } from "@babylonjs/core/types";
@@ -36,7 +36,9 @@ export class MyStuffElem extends ReactiveElement {
 
     override connectedCallback(): void {
         super.connectedCallback();
+        this.#init();
         this.#initShuffling();
+        this.#create();
     }
 
     #initShuffling() {
@@ -65,13 +67,6 @@ export class MyStuffElem extends ReactiveElement {
         });
     }
 
-    override update(changes: PropertyValues) {
-        if (!this.hasUpdated) {
-            this.#createStuff();
-        }
-        super.update(changes);
-    }
-
     #randomLoc() {
         const radius = this.radius ?? Math.min(this.ctx!.scene.worldSize.x, this.ctx!.scene.worldSize.z) * 0.5;
 
@@ -83,12 +78,8 @@ export class MyStuffElem extends ReactiveElement {
 
     _defaultMat!: PBRMetallicRoughnessMaterial;
 
-    createItem() {
-        assertNonNull(this.ctx?.scene);
-        this._createItem(Math.floor(Math.random() * 3));
-    }
-
     _createItem = (type: number) => {
+        debug(this, "creating", { type });
         const scene = this.ctx!.scene;
 
         let idx = (1 + (scene.meshes.length ?? 0)).toString().padStart(3, "0");
@@ -114,14 +105,20 @@ export class MyStuffElem extends ReactiveElement {
         return mesh;
     };
 
-    #createStuff() {
-        debug(this, "creating", { count: this.count });
-
+    async #init() {
+        debug(this, "initializing");
         this._defaultMat = new PBRMetallicRoughnessMaterial("default", this.ctx!.scene);
         this._defaultMat.metallic = 0;
-        this._defaultMat.roughness = 0.5;
+        this._defaultMat.roughness = 0.5;    
+    }
 
+    async #create() {
+        if(!this.count) return;
         for (let i = 0; i < this.count; i++) this._createItem(i % 4);
     }
 
+    createItem() {
+        assertNonNull(this.ctx?.scene);
+        this._createItem(Math.floor(Math.random() * 3));
+    }
 }
