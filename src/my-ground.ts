@@ -12,7 +12,7 @@ import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
 
 import { sceneCtx, utilsCtx, type SceneCtx } from "./context";
 import { assertNonNull } from "./utils/asserts";
-import { debug } from "./utils/debug";
+import { debug, debugChanges } from "./utils/debug";
 
 const GROUND_TXT = new URL("./assets/ground.png?inline", import.meta.url);
 
@@ -20,16 +20,16 @@ const GROUND_TXT = new URL("./assets/ground.png?inline", import.meta.url);
 export class MyGroundElem extends ReactiveElement {
     @consume({ context: sceneCtx, subscribe: true })
     @state()
-    ctx: Nullable<SceneCtx> = null;
+    ctx!: SceneCtx;
 
     @consume({ context: utilsCtx, subscribe: false })
     utils!: Scene;
 
+    @property({ type: Number })
+    size: Nullable<number> = null;
+
     @property({ type: Boolean })
     autoSize = false;
-
-    @property({ type: Number })
-    radius: Nullable<number> = null;
 
     @property()
     color: string = "#20f0f0";
@@ -40,35 +40,19 @@ export class MyGroundElem extends ReactiveElement {
     @property({ type: Number })
     opacity2 = 0.75;
 
-    protected override shouldUpdate(_changes: PropertyValues): boolean {
-        return this.ctx != null && this.utils != null;
-    }
+    @state()
+    _size: number = 0;
 
-    override update(changes: PropertyValues) {
-        if (!this.hasUpdated) {
-            this.#create();
-            this.resize();
-        }
-        else {
-            if ((changes.has("ctx") || changes.has("autoSize")) && this.autoSize) this.resize();
-            if (changes.has("radius") && !this.autoSize) this.resize();
-
-            if (changes.has("opacity")) {
-                this._mtl.opacity = this.opacity;
-            }
-
-            if (changes.has("color")) {
-                this._mtl.lineColor = Color3.FromHexString(this.color);
-            }
-        }
-
-        super.update(changes);
+    override connectedCallback(): void {
+        super.connectedCallback();
+        this.#init();
     }
 
     _mesh!: Mesh;
     _mtl!: GridMaterial;
 
-    #create() {
+    #init() {
+        debug(this, "initilizing");
         assertNonNull(this.ctx);
         const scene = this.utils;
 
@@ -76,29 +60,51 @@ export class MyGroundElem extends ReactiveElement {
         this._mesh.isPickable = false;
 
         this._mtl = new GridMaterial("(Ground)", scene);
-        this._mtl.lineColor = Color3.FromHexString(this.color);
         this._mtl.majorUnitFrequency = 8;
-        this._mtl.minorUnitVisibility = this.opacity2;
         this._mtl.backFaceCulling = false;
-        this._mtl.opacity = this.opacity;
         this._mtl.opacityTexture = new Texture(GROUND_TXT.href, scene);
 
         this._mesh.material = this._mtl;
+
+        this._size = this.size ?? this.#calcSize();
     }
 
-    resize() {
+    #calcSize() {
         assertNonNull(this.ctx);
-        if (this.autoSize) {
-            this._resize(4 * Math.max(this.ctx!.bounds.max.length(), this.ctx!.bounds.min.length()));
+        if (this.ctx.bounds) {
+            return 3 * Math.max(
+                Math.abs(this.ctx.bounds.minimum.x), 
+                Math.abs(this.ctx.bounds.minimum.z), 
+                Math.abs(this.ctx.bounds.maximum.x), 
+                Math.abs(this.ctx.bounds.maximum.z), 
+            )
         } else {
-            this._resize(this.radius ? this.radius * 2 : this.ctx.worldSize)
+            return 2 * Math.max(this.ctx.scene.worldSize.x, this.ctx.scene.worldSize.z);
         }
     }
 
-    _resize(size: number) {
-        debug(this, "resizing", { size });
-        this._mesh.scaling.x = size;
-        this._mesh.scaling.z = size;
-        this._mtl.gridRatio = 1 / size;
+    #resize() {
+        debug(this, "resizing", { size: this._size });
+        this._mesh.scaling.x = this._size;
+        this._mesh.scaling.z = this._size;
+        this._mtl.gridRatio = 1 / this._size;
+    }
+
+
+    override update(changes: PropertyValues) {
+        if ((changes.has("ctx") || changes.has("autoSize")) && this.autoSize) this._size = this.#calcSize();
+
+        if (changes.has("size") && this.size) this._size = this.size;
+
+        if (changes.has("_size")) this.#resize();
+
+        if (changes.has("opacity")) this._mtl.opacity = this.opacity;
+
+        if (changes.has("opacity2")) this._mtl.minorUnitVisibility = this.opacity2;
+
+        if (changes.has("color")) {
+            this._mtl.lineColor = Color3.FromHexString(this.color);
+        }
+        super.update(changes);
     }
 }

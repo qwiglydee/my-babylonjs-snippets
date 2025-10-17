@@ -1,5 +1,5 @@
 import { consume } from "@lit/context";
-import { ReactiveElement, type PropertyValues } from "lit";
+import { ReactiveElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
@@ -17,7 +17,7 @@ import { debug } from "./utils/debug";
 @customElement("my-stuff")
 export class MyStuffElem extends ReactiveElement {
     @consume({ context: sceneCtx, subscribe: true })
-    ctx: Nullable<SceneCtx> = null;
+    ctx!: SceneCtx;
 
     @consume({ context: pickCtx, subscribe: true })
     pick: Nullable<PickingInfo> = null;
@@ -34,20 +34,41 @@ export class MyStuffElem extends ReactiveElement {
     @property({ type: Boolean })
     shuffling = false;
 
-    protected override shouldUpdate(_changes: PropertyValues): boolean {
-        return this.ctx != null;
+    override connectedCallback(): void {
+        super.connectedCallback();
+        this.#init();
+        this.#initShuffling();
+        this.#create();
     }
 
-    override update(changes: PropertyValues) {
-        if (!this.hasUpdated) {
-            this.#initShuffling();
-            this.#createStuff();
-        }
-        super.update(changes);
+    #initShuffling() {
+        const scene = this.ctx!.scene;
+        scene.onKeyboardObservable.add((info: KeyboardInfo) => {
+            let selected = this.pick?.pickedMesh;
+            if (!selected) return;
+            if (info.type != KeyboardEventTypes.KEYDOWN && "gsr".includes(info.event.key)) {
+                switch (info.event.key) {
+                    case "g":
+                        const ext = this.radius ? Vector3.One().scale(this.radius) : this.ctx!.world.extendSize;
+                        selected.position.x = (Math.random() * 2 - 1) * ext.x;
+                        selected.position.z = (Math.random() * 2 - 1) * ext.z;
+                        break;
+                    case "s":
+                        selected.scaling.x = (Math.random() * 0.75 + 0.25) * this.size;
+                        selected.scaling.z = (Math.random() * 0.75 + 0.25) * this.size;
+                        break;
+                    case "r":
+                        selected.rotation.z = (Math.random() * 2 + 1) * Math.PI;
+                        selected.rotation.x = (Math.random() * 2 + 1) * Math.PI;
+                        break;
+                }
+            }
+            scene.onModelUpdatedObservable.notifyObservers([selected]);
+        });
     }
 
     #randomLoc() {
-        const radius = this.radius ?? this.ctx!.worldSize * 0.5;
+        const radius = this.radius ?? Math.min(this.ctx!.scene.worldSize.x, this.ctx!.scene.worldSize.z) * 0.5;
 
         const rndc = () => (Math.random() * 2 - 1) * radius;
         const snap = (coord: number) => this.size * (0.5 + Math.floor(coord / this.size));
@@ -57,12 +78,8 @@ export class MyStuffElem extends ReactiveElement {
 
     _defaultMat!: PBRMetallicRoughnessMaterial;
 
-    createItem() {
-        assertNonNull(this.ctx?.scene);
-        this._createItem(Math.floor(Math.random() * 3));
-    }
-
     _createItem = (type: number) => {
+        debug(this, "creating", { type });
         const scene = this.ctx!.scene;
 
         let idx = (1 + (scene.meshes.length ?? 0)).toString().padStart(3, "0");
@@ -88,39 +105,20 @@ export class MyStuffElem extends ReactiveElement {
         return mesh;
     };
 
-    #createStuff() {
-        debug(this, "creating", { count: this.count });
-
+    async #init() {
+        debug(this, "initializing");
         this._defaultMat = new PBRMetallicRoughnessMaterial("default", this.ctx!.scene);
         this._defaultMat.metallic = 0;
-        this._defaultMat.roughness = 0.5;
+        this._defaultMat.roughness = 0.5;    
+    }
 
+    async #create() {
+        if(!this.count) return;
         for (let i = 0; i < this.count; i++) this._createItem(i % 4);
     }
 
-    #initShuffling() {
-        this.ctx!.scene.onKeyboardObservable.add((info: KeyboardInfo) => {
-            let selected = this.pick?.pickedMesh;
-            if (!selected) return;
-            if (info.type != KeyboardEventTypes.KEYDOWN && "gsr".includes(info.event.key)) {
-                switch (info.event.key) {
-                    case "g":
-                        const radius = this.radius ?? this.ctx!.worldSize * 0.5;
-                        selected.position.x = (Math.random() * 2 - 1) * radius;
-                        selected.position.z = (Math.random() * 2 - 1) * radius;
-
-                        break;
-                    case "s":
-                        selected.scaling.x = (Math.random() * 0.75 + 0.25) * this.size;
-                        selected.scaling.z = (Math.random() * 0.75 + 0.25) * this.size;
-                        break;
-                    case "r":
-                        selected.rotation.z = (Math.random() * 2 + 1) * Math.PI;
-                        selected.rotation.x = (Math.random() * 2 + 1) * Math.PI;
-                        break;
-                }
-            }
-            this.ctx!.scene.onModelUpdatedObservable.notifyObservers([selected]);
-        });
+    createItem() {
+        assertNonNull(this.ctx?.scene);
+        this._createItem(Math.floor(Math.random() * 3));
     }
 }

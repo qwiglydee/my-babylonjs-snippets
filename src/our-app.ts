@@ -3,7 +3,7 @@ import { customElement, property } from "lit/decorators.js";
 import { provide } from "@lit/context";
 
 import { type AppCtx, appCtx, type PickEvent } from "./context";
-import { debugChanges } from "./utils/debug";
+import { debug, debugChanges } from "./utils/debug";
 
 /**
  * Babylon-unaware web app
@@ -32,6 +32,7 @@ export class OurAppElem extends ReactiveElement {
 
     override connectedCallback(): void {
         super.connectedCallback();
+        debug(this, "initializing");
         this.ctx = {
             status: "Hello",
             foo: "..."
