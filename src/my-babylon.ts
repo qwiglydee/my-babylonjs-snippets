@@ -13,14 +13,14 @@ import { HighlightLayer } from "@babylonjs/core/Layers/highlightLayer";
 import { Color3, Color4, Vector3 } from "@babylonjs/core/Maths";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
+import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
 
-import { sceneCtx, pickCtx, utilsCtx, type SceneCtx, type PickDetail } from "./context";
+import { pickCtx, sceneCtx, utilsCtx, type PickDetail, type SceneCtx } from "./context";
 import { MyScene } from "./scene";
 import { assertNonNull } from "./utils/asserts";
-import { debug, debugChanges } from "./utils/debug";
-import { bubbleEvent } from "./utils/events";
-import type { Scene } from "@babylonjs/core/scene";
+import { debug } from "./utils/debug";
+import { bubbleEvent, queueEvent } from "./utils/events";
 
 const ENGOPTIONS: EngineOptions = {
     antialias: true,
@@ -33,11 +33,13 @@ const ENGOPTIONS: EngineOptions = {
  */
 @customElement("my-babylon")
 export class MyBabylonElem extends ReactiveElement {
+    /** available immediately, updating when scene content changes */
     @provide({ context: sceneCtx })
-    ctx: Nullable<SceneCtx> = null; // updated when changed and got ready
+    ctx!: SceneCtx;
 
+    /** utility layer scene */
     @provide({ context: utilsCtx })
-    utils!: Scene; // utilityrender scene, available right after dom connection, const
+    utils!: Scene;
 
     @provide({ context: pickCtx })
     pick: Nullable<PickingInfo> = null;
@@ -142,11 +144,10 @@ export class MyBabylonElem extends ReactiveElement {
     _ctx_dirty = true;
 
     #invalidateCtx() {
-        debug(this, `CTX ...`);
+        debug(this, 'CTX');
         this._ctx_dirty = true;
     }
 
-    /** this notifies all plugged in subscribers */
     async #refreshCtx() {
         if (!this._ctx_dirty) return;
         await this.scene.whenReadyAsync(true);
@@ -156,8 +157,8 @@ export class MyBabylonElem extends ReactiveElement {
             bounds: this.scene.getModelBounds(),
         };
         this._ctx_dirty = false;
-        debug(this, `CTX ==`, this.ctx);
-        bubbleEvent(this, "babylon.updated", {});
+        debug(this, `CTX ===`, this.ctx);
+        queueEvent(this, "babylon.updated", {});
     }
 
     override connectedCallback(): void {
@@ -189,7 +190,12 @@ export class MyBabylonElem extends ReactiveElement {
         this.scene.onModelUpdatedObservable.add(() => this.#invalidateCtx());
 
         new AxesViewer(this.utils);
-        // this.#refreshCtx();
+        // NB: initial ctx scene is not ready yet but it's empty
+        this.ctx = {
+            scene: this.scene,
+            world: this.scene.getWorldBounds(),
+            bounds: null,
+        }
     }
 
     #initPicking() {
@@ -230,7 +236,6 @@ export class MyBabylonElem extends ReactiveElement {
     }
 
     override update(changes: PropertyValues) {
-        debugChanges(this, "updating", changes);
         if (changes.has("_ctx_dirty") && this._ctx_dirty) this.#refreshCtx();
         super.update(changes);
     }
@@ -256,19 +261,19 @@ export class MyBabylonElem extends ReactiveElement {
         this._selected = this.pick.pickedMesh as Mesh;
         this.#select(this._selected);
 
-        bubbleEvent<PickDetail>(this, "babylon.picked", { state: "picked", mesh: this._selected.id });
+        queueEvent<PickDetail>(this, "babylon.picked", { state: "picked", mesh: this._selected.id });
     }
 
     unpick() {
         if (this._selected) this.#deselect(this._selected);
         this._selected = null;
         this.pick = null;
-        bubbleEvent<PickDetail>(this, "babylon.picked", { mesh: null });
+        queueEvent<PickDetail>(this, "babylon.picked", { mesh: null });
     }
 
     ongrabbed(mesh: Mesh) {
         assertNonNull(mesh);
-        bubbleEvent<PickDetail>(this, "babylon.grabbed", { state: "dragging", mesh: mesh.id });
+        queueEvent<PickDetail>(this, "babylon.grabbed", { state: "dragging", mesh: mesh.id });
     }
 
     ondropped(mesh: Mesh, dist: number) {
@@ -276,6 +281,6 @@ export class MyBabylonElem extends ReactiveElement {
         if (dist == 0) return;
         this.unpick();
         this.#invalidateCtx();
-        bubbleEvent<PickDetail>(this, "babylon.dropped", { state: "dropped", mesh: mesh.id });
+        queueEvent<PickDetail>(this, "babylon.dropped", { state: "dropped", mesh: mesh.id });
     }
 }

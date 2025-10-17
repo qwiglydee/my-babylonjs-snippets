@@ -5,7 +5,6 @@ import { customElement, property, state } from "lit/decorators.js";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { Vector3 } from "@babylonjs/core/Maths";
 import { Tools } from "@babylonjs/core/Misc/tools";
-import type { Nullable } from "@babylonjs/core/types";
 
 import { sceneCtx, type SceneCtx } from "./context";
 import { assertNonNull } from "./utils/asserts";
@@ -15,7 +14,7 @@ import { debug } from "./utils/debug";
 export class MyArcCameraElem extends ReactiveElement {
     @consume({ context: sceneCtx, subscribe: true })
     @state()
-    ctx: Nullable<SceneCtx> = null;
+    ctx!: SceneCtx;
 
     @property({ type: Boolean })
     autoZoom = false;
@@ -31,10 +30,6 @@ export class MyArcCameraElem extends ReactiveElement {
 
     @property({ type: Number })
     initBeta: number = 45;
-
-    protected override shouldUpdate(_changes: PropertyValues): boolean {
-        return this.ctx != null;
-    }
 
     override update(changes: PropertyValues) {
         if (!this.hasUpdated) this.#create();

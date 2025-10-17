@@ -17,7 +17,7 @@ const DEFAULT_ENV = new URL("./assets/studio.env?inline", import.meta.url);
 @customElement("my-environ")
 export class MyEnvironElem extends ReactiveElement {
     @consume({ context: sceneCtx, subscribe: true })
-    ctx: Nullable<SceneCtx> = null;
+    ctx!: SceneCtx;
 
     @property()
     src: Nullable<string> = null;
@@ -33,10 +33,6 @@ export class MyEnvironElem extends ReactiveElement {
 
     @property({ type: Number })
     skyBlur = 0.5;
-
-    protected override shouldUpdate(_changes: PropertyValues): boolean {
-        return this.ctx != null;
-    }
 
     override update(changes: PropertyValues) {
         if (!this.hasUpdated) this.#create();

@@ -1,10 +1,11 @@
 import { createContext } from "@lit/context";
 
 import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
+import type { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
 import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
+
 import type { MyScene } from "./scene";
-import type { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
 
 export interface AppCtx {
     status: string;
@@ -21,12 +22,11 @@ export interface SceneCtx {
     bounds: Nullable<BoundingBox>;
 }
 
-export const sceneCtx = createContext<Nullable<SceneCtx>>(Symbol('babylon.scene'));
+export const sceneCtx = createContext<SceneCtx>(Symbol('babylon.scene'));
 
-// NB: non nullable
-export const utilsCtx = createContext<Scene>(Symbol('babylo.utils'));
+export const utilsCtx = createContext<Scene>(Symbol('babylon.utils'));
 
-export const pickCtx = createContext<Nullable<PickingInfo>>(Symbol('babylo.pick'))
+export const pickCtx = createContext<Nullable<PickingInfo>>(Symbol('babylon.pick'))
 
 export interface PickDetail {
     mesh: Nullable<string>;

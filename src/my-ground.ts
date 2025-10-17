@@ -20,7 +20,7 @@ const GROUND_TXT = new URL("./assets/ground.png?inline", import.meta.url);
 export class MyGroundElem extends ReactiveElement {
     @consume({ context: sceneCtx, subscribe: true })
     @state()
-    ctx: Nullable<SceneCtx> = null;
+    ctx!: SceneCtx;
 
     @consume({ context: utilsCtx, subscribe: false })
     utils!: Scene;
@@ -43,29 +43,23 @@ export class MyGroundElem extends ReactiveElement {
     @state()
     _size: number = 0;
 
-    protected override shouldUpdate(_changes: PropertyValues): boolean {
-        return this.ctx != null;
-    }
-
     override update(changes: PropertyValues) {
         if (!this.hasUpdated) this.#create();
+        else {
+            if ((changes.has("ctx") || changes.has("autoSize")) && this.autoSize) this._adjust();
+            
+            if (changes.has("size") && this.size) this._size = this.size;
 
-        debugChanges(this, "updating", changes);
+            if (changes.has("_size")) this._resize(this._size);
 
-        if ((changes.has("ctx") || changes.has("autoSize")) && this.autoSize) this._adjust();
-        
-        if (changes.has("size") && this.size) this._size = this.size;
+            if (changes.has("opacity")) {
+                this._mtl.opacity = this.opacity;
+            }
 
-        if (changes.has("_size")) this._resize(this._size);
-
-        if (changes.has("opacity")) {
-            this._mtl.opacity = this.opacity;
+            if (changes.has("color")) {
+                this._mtl.lineColor = Color3.FromHexString(this.color);
+            }
         }
-
-        if (changes.has("color")) {
-            this._mtl.lineColor = Color3.FromHexString(this.color);
-        }
-
         super.update(changes);
     }
 

@@ -24,10 +24,7 @@ export class MyScene extends Scene {
         this.worldSize = worldSize;
         this._worldBounds = new BoundingBox(this.worldSize.scale(-0.5), this.worldSize.scale(+0.5));
         const maybeupd = (mesh: AbstractMesh) => { 
-            if (this.#nonAuxFilter(mesh)) {
-                console.debug("upd", mesh);
-                this.onModelUpdatedObservable.notifyObservers([mesh]) 
-            }
+            if (this.#nonAuxFilter(mesh)) this.onModelUpdatedObservable.notifyObservers([mesh]);
         };
         this.onNewMeshAddedObservable.add(maybeupd);
         this.onMeshRemovedObservable.add(maybeupd);

@@ -17,7 +17,7 @@ import { debug } from "./utils/debug";
 @customElement("my-stuff")
 export class MyStuffElem extends ReactiveElement {
     @consume({ context: sceneCtx, subscribe: true })
-    ctx: Nullable<SceneCtx> = null;
+    ctx!: SceneCtx;
 
     @consume({ context: pickCtx, subscribe: true })
     pick: Nullable<PickingInfo> = null;
@@ -34,13 +34,39 @@ export class MyStuffElem extends ReactiveElement {
     @property({ type: Boolean })
     shuffling = false;
 
-    protected override shouldUpdate(_changes: PropertyValues): boolean {
-        return this.ctx != null;
+    override connectedCallback(): void {
+        super.connectedCallback();
+        this.#initShuffling();
+    }
+
+    #initShuffling() {
+        const scene = this.ctx!.scene;
+        scene.onKeyboardObservable.add((info: KeyboardInfo) => {
+            let selected = this.pick?.pickedMesh;
+            if (!selected) return;
+            if (info.type != KeyboardEventTypes.KEYDOWN && "gsr".includes(info.event.key)) {
+                switch (info.event.key) {
+                    case "g":
+                        const ext = this.radius ? Vector3.One().scale(this.radius) : this.ctx!.world.extendSize;
+                        selected.position.x = (Math.random() * 2 - 1) * ext.x;
+                        selected.position.z = (Math.random() * 2 - 1) * ext.z;
+                        break;
+                    case "s":
+                        selected.scaling.x = (Math.random() * 0.75 + 0.25) * this.size;
+                        selected.scaling.z = (Math.random() * 0.75 + 0.25) * this.size;
+                        break;
+                    case "r":
+                        selected.rotation.z = (Math.random() * 2 + 1) * Math.PI;
+                        selected.rotation.x = (Math.random() * 2 + 1) * Math.PI;
+                        break;
+                }
+            }
+            scene.onModelUpdatedObservable.notifyObservers([selected]);
+        });
     }
 
     override update(changes: PropertyValues) {
         if (!this.hasUpdated) {
-            this.#initShuffling();
             this.#createStuff();
         }
         super.update(changes);
@@ -98,28 +124,4 @@ export class MyStuffElem extends ReactiveElement {
         for (let i = 0; i < this.count; i++) this._createItem(i % 4);
     }
 
-    #initShuffling() {
-        this.ctx!.scene.onKeyboardObservable.add((info: KeyboardInfo) => {
-            let selected = this.pick?.pickedMesh;
-            if (!selected) return;
-            if (info.type != KeyboardEventTypes.KEYDOWN && "gsr".includes(info.event.key)) {
-                switch (info.event.key) {
-                    case "g":
-                        const ext = this.radius ? Vector3.One().scale(this.radius) : this.ctx!.world.extendSize;
-                        selected.position.x = (Math.random() * 2 - 1) * ext.x;
-                        selected.position.z = (Math.random() * 2 - 1) * ext.z;
-                        break;
-                    case "s":
-                        selected.scaling.x = (Math.random() * 0.75 + 0.25) * this.size;
-                        selected.scaling.z = (Math.random() * 0.75 + 0.25) * this.size;
-                        break;
-                    case "r":
-                        selected.rotation.z = (Math.random() * 2 + 1) * Math.PI;
-                        selected.rotation.x = (Math.random() * 2 + 1) * Math.PI;
-                        break;
-                }
-            }
-            this.ctx!.scene.onModelUpdatedObservable.notifyObservers([selected]);
-        });
-    }
 }
