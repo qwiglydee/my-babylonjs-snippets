@@ -47,9 +47,6 @@ export class MyBabylonElem extends ReactiveElement {
     @property({ type: Boolean })
     rightHanded = false;
 
-    @property({ type: Number })
-    worldSize = 100;
-
     @property({ type: Boolean })
     picking = false;
 
@@ -174,7 +171,7 @@ export class MyBabylonElem extends ReactiveElement {
         // NB: initial scene is not ready yet but it's empty anyway
         this.ctx = {
             scene: this.scene,
-            world: this.scene.getWorldBounds(),
+            world: null,
             bounds: null,
         }
     }
@@ -189,7 +186,7 @@ export class MyBabylonElem extends ReactiveElement {
     #init() {
         debug(this, "initializing");
         this.engine = new Engine(this.canvas, undefined, ENGOPTIONS);
-        this.scene = new MyScene(this.engine, Vector3.One().scale(this.worldSize));
+        this.scene = new MyScene(this.engine);
         this.scene.useRightHandedSystem = this.rightHanded;
         this.scene.clearColor = Color4.FromHexString(getComputedStyle(this).getPropertyValue("--my-background-color"));
         this.utils = new UtilityLayerRenderer(this.scene, false, false).utilityLayerScene;

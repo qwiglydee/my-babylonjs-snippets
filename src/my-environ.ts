@@ -22,6 +22,9 @@ export class MyEnvironElem extends ReactiveElement {
     @property()
     src: Nullable<string> = null;
 
+    @property({ type: Number})
+    size = 1000;
+
     @property({ type: Number })
     envIntens = 1.0;
 
@@ -62,7 +65,7 @@ export class MyEnvironElem extends ReactiveElement {
     }
 
     #initSky() {
-        const scene = this.ctx!.scene;
+        const scene = this.ctx.scene;
 
         this._skyTxt = this._envTxt!.clone();
         this._skyTxt.coordinatesMode = Texture.SKYBOX_MODE;
@@ -71,8 +74,7 @@ export class MyEnvironElem extends ReactiveElement {
         this._skyMat.backFaceCulling = false;
         this._skyMat.reflectionTexture = this._skyTxt;
 
-        this._skyBox = CreateBox("(SkyBox)", { size: 1, sideOrientation: Mesh.BACKSIDE }, scene);
-        this._skyBox.scaling = this.ctx!.scene.worldSize.scale(2);
+        this._skyBox = CreateBox("(SkyBox)", { size: this.size, sideOrientation: Mesh.BACKSIDE }, scene);
         this._skyBox.isPickable = false;
         this._skyBox.material = this._skyMat;
         this._skyBox.infiniteDistance = true;
@@ -83,6 +85,7 @@ export class MyEnvironElem extends ReactiveElement {
 
     override update(changes: PropertyValues) {
         if (this.hasUpdated && changes.has("src")) throw Error("not supported");
+        if (this.hasUpdated && changes.has("size")) throw Error("not supported");
         if (changes.has("envIntens") && this._envTxt) this._envTxt.level = this.envIntens;
         if (changes.has("skyIntens") && this._skyTxt) this._skyTxt.level = this.skyIntens;
         if (changes.has("skyBlur") && this._skyMat) this._skyMat.reflectionBlur = this.skyBlur;

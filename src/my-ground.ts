@@ -3,16 +3,15 @@ import { ReactiveElement, type PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
 import { Texture } from "@babylonjs/core/Materials/Textures/texture";
-import { Color3 } from "@babylonjs/core/Maths";
+import { Color3, Vector2, Vector3 } from "@babylonjs/core/Maths";
 import { CreateGround } from "@babylonjs/core/Meshes/Builders/groundBuilder";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
-import type { Nullable } from "@babylonjs/core/types";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
 
 import { sceneCtx, utilsCtx, type SceneCtx } from "./context";
 import { assertNonNull } from "./utils/asserts";
-import { debug, debugChanges } from "./utils/debug";
+import { debug } from "./utils/debug";
 
 const GROUND_TXT = new URL("./assets/ground.png?inline", import.meta.url);
 
@@ -26,7 +25,7 @@ export class MyGroundElem extends ReactiveElement {
     utils!: Scene;
 
     @property({ type: Number })
-    size: Nullable<number> = null;
+    defaultSize: number = 100;
 
     @property({ type: Boolean })
     autoSize = false;
@@ -66,21 +65,11 @@ export class MyGroundElem extends ReactiveElement {
 
         this._mesh.material = this._mtl;
 
-        this._size = this.size ?? this.#calcSize();
+        this._size = this.defaultSize;
     }
 
     #calcSize() {
-        assertNonNull(this.ctx);
-        if (this.ctx.bounds) {
-            return 3 * Math.max(
-                Math.abs(this.ctx.bounds.minimum.x), 
-                Math.abs(this.ctx.bounds.minimum.z), 
-                Math.abs(this.ctx.bounds.maximum.x), 
-                Math.abs(this.ctx.bounds.maximum.z), 
-            )
-        } else {
-            return 2 * Math.max(this.ctx.scene.worldSize.x, this.ctx.scene.worldSize.z);
-        }
+        return this.ctx.world ? 2 * (new Vector2(this.ctx.world.extendSize.x, this.ctx.world.extendSize.z)).length() : this.defaultSize;
     }
 
     #resize() {
@@ -90,12 +79,10 @@ export class MyGroundElem extends ReactiveElement {
         this._mtl.gridRatio = 1 / this._size;
     }
 
-
     override update(changes: PropertyValues) {
-        if ((changes.has("ctx") || changes.has("autoSize")) && this.autoSize) this._size = this.#calcSize();
-
-        if (changes.has("size") && this.size) this._size = this.size;
-
+        if (this.autoSize && (changes.has("ctx") || changes.has("autoSize"))) this._size = this.#calcSize();
+        if (!this.autoSize && changes.has('defaultSize')) this._size = this.defaultSize;
+        
         if (changes.has("_size")) this.#resize();
 
         if (changes.has("opacity")) this._mtl.opacity = this.opacity;

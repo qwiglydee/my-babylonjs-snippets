@@ -26,10 +26,14 @@ export class MyArcCameraElem extends ReactiveElement {
     zoomFactor = 1.0;
 
     @property({ type: Number })
-    initAlpha: number = 45;
+    defaultAlpha: number = 45;
 
     @property({ type: Number })
-    initBeta: number = 45;
+    defaultBeta: number = 45;
+
+    @property({ type: Number })
+    defaultRadius: number = 45;
+
 
     override connectedCallback(): void {
         super.connectedCallback();
@@ -49,13 +53,13 @@ export class MyArcCameraElem extends ReactiveElement {
     #init() {
         debug(this, "initializing");
         const scene = this.ctx!.scene;
-        const radius = this.ctx!.scene.worldSize.length() * 0.5;
-        this._camera = new ArcRotateCamera("(Camera)", Tools.ToRadians(this.initAlpha), Tools.ToRadians(this.initBeta), radius, Vector3.Zero(), scene);
+        const radius = this.defaultRadius;
+        this._camera = new ArcRotateCamera("(Camera)", Tools.ToRadians(this.defaultAlpha), Tools.ToRadians(this.defaultBeta), radius, Vector3.Zero(), scene);
         this._camera.setEnabled(false);
         this._camera.minZ = 0.001;
         this._camera.maxZ = 1000;
-        this._camera.lowerRadiusLimit = 1;
-        this._camera.upperRadiusLimit = radius;
+        this._camera.lowerRadiusLimit = 0.5 * radius;
+        this._camera.upperRadiusLimit = 2 * radius;
         this._camera.wheelDeltaPercentage = 0.01; // ??
         this._camera.useNaturalPinchZoom = true;
         scene.activeCamera = this._camera;
@@ -74,14 +78,14 @@ export class MyArcCameraElem extends ReactiveElement {
         assertNonNull(this.ctx);
         this._camera.autoRotationBehavior?.resetLastInteractionTime();
 
-        if (this.ctx.bounds) {
-            const distance = this._camera._calculateLowerRadiusFromModelBoundingSphere(this.ctx.bounds.minimum, this.ctx.bounds.maximum, this.zoomFactor);
+        if (this.ctx.world) {
+            const distance = this._camera._calculateLowerRadiusFromModelBoundingSphere(this.ctx.world.minimum, this.ctx.world.maximum, this.zoomFactor);
             this._camera.radius = distance;
-            this._camera.focusOn({ min: this.ctx.bounds.minimum, max: this.ctx.bounds.maximum, distance }, true);
+            this._camera.focusOn({ min: this.ctx.world.minimum, max: this.ctx.world.maximum, distance }, true);
         } else {
-            this._camera.radius = this.ctx.world.extendSize.length();
-            this._camera.alpha = Tools.ToRadians(this.initAlpha);
-            this._camera.beta = Tools.ToRadians(this.initBeta);
+            this._camera.radius = this.defaultRadius;
+            this._camera.alpha = Tools.ToRadians(this.defaultAlpha);
+            this._camera.beta = Tools.ToRadians(this.defaultBeta);
         }
     }
 }
