@@ -21,7 +21,7 @@ import { guiCtx, pickCtx, sceneCtx, utilsCtx, type PickDetail, type SceneCtx } f
 import { MyScene } from "./scene";
 import { assertNonNull } from "./utils/asserts";
 import { debug } from "./utils/debug";
-import { bubbleEvent } from "./utils/events";
+import { queueEvent } from "./utils/events";
 
 const ENGOPTIONS: EngineOptions = {
     antialias: true,
@@ -34,11 +34,13 @@ const ENGOPTIONS: EngineOptions = {
  */
 @customElement("my-babylon")
 export class MyBabylonElem extends ReactiveElement {
+    /** available immediately, updating when scene content changes */
     @provide({ context: sceneCtx })
-    ctx: Nullable<SceneCtx> = null; // updated when changed and got ready
+    ctx!: SceneCtx;
 
+    /** utility layer scene */
     @provide({ context: utilsCtx })
-    utils!: Scene; // utilityrender scene, available right after dom connection, const
+    utils!: Scene;
 
     @provide({ context: guiCtx })
     gui!: AdvancedDynamicTexture;
@@ -146,21 +148,21 @@ export class MyBabylonElem extends ReactiveElement {
     _ctx_dirty = true;
 
     #invalidateCtx() {
+        debug(this, 'CTX');
         this._ctx_dirty = true;
     }
 
-    /** this notifies all plugged in subscribers */
     async #refreshCtx() {
         if (!this._ctx_dirty) return;
         await this.scene.whenReadyAsync(true);
         this.ctx = {
-            worldSize: this.worldSize,
             scene: this.scene,
-            bounds: this.scene.getModelExtends(),
+            world: this.scene.getWorldBounds(),
+            bounds: this.scene.getModelBounds(),
         };
         this._ctx_dirty = false;
-        debug(this, `CTX ==`, this.ctx);
-        bubbleEvent(this, "babylon.updated", {});
+        debug(this, `CTX ===`, this.ctx);
+        queueEvent(this, "babylon.updated", {});
     }
 
     override connectedCallback(): void {
@@ -170,8 +172,15 @@ export class MyBabylonElem extends ReactiveElement {
         if (this.picking) this.#initPicking();
         if (this.dragging) this.#initDragging();
         if (this.highlighting) this.#initHighlighting();
+        this.scene.onModelUpdatedObservable.add(() => this.#invalidateCtx());
         this.#resizingObs.observe(this);
         this.#visibilityObs.observe(this);
+        // NB: initial scene is not ready yet but it's empty anyway
+        this.ctx = {
+            scene: this.scene,
+            world: this.scene.getWorldBounds(),
+            bounds: null,
+        }
     }
 
     override disconnectedCallback(): void {
@@ -184,16 +193,12 @@ export class MyBabylonElem extends ReactiveElement {
     #init() {
         debug(this, "initializing");
         this.engine = new Engine(this.canvas, undefined, ENGOPTIONS);
-        this.scene = new MyScene(this.engine);
+        this.scene = new MyScene(this.engine, Vector3.One().scale(this.worldSize));
         this.scene.useRightHandedSystem = this.rightHanded;
         this.scene.clearColor = Color4.FromHexString(getComputedStyle(this).getPropertyValue("--my-background-color"));
         this.utils = new UtilityLayerRenderer(this.scene, false, false).utilityLayerScene;
         this.gui = AdvancedDynamicTexture.CreateFullscreenUI("GUI", true, this.utils); // on top of utils scene
-
-        this.scene.onModelUpdatedObservable.add(() => this.#invalidateCtx());
-
         new AxesViewer(this.utils);
-        this.#refreshCtx();
     }
 
     #initPicking() {
@@ -234,7 +239,7 @@ export class MyBabylonElem extends ReactiveElement {
     }
 
     override update(changes: PropertyValues) {
-        if (changes.has("_ctx_dirty")) this.#refreshCtx();
+        if (changes.has("_ctx_dirty") && this._ctx_dirty) this.#refreshCtx();
         super.update(changes);
     }
 
@@ -259,19 +264,19 @@ export class MyBabylonElem extends ReactiveElement {
         this._selected = this.pick.pickedMesh as Mesh;
         this.#select(this._selected);
 
-        bubbleEvent<PickDetail>(this, "babylon.picked", { state: "picked", mesh: this._selected.id });
+        queueEvent<PickDetail>(this, "babylon.picked", { state: "picked", mesh: this._selected.id });
     }
 
     unpick() {
         if (this._selected) this.#deselect(this._selected);
         this._selected = null;
         this.pick = null;
-        bubbleEvent<PickDetail>(this, "babylon.picked", { mesh: null });
+        queueEvent<PickDetail>(this, "babylon.picked", { mesh: null });
     }
 
     ongrabbed(mesh: Mesh) {
         assertNonNull(mesh);
-        bubbleEvent<PickDetail>(this, "babylon.grabbed", { state: "dragging", mesh: mesh.id });
+        queueEvent<PickDetail>(this, "babylon.grabbed", { state: "dragging", mesh: mesh.id });
     }
 
     ondropped(mesh: Mesh, dist: number) {
@@ -279,6 +284,6 @@ export class MyBabylonElem extends ReactiveElement {
         if (dist == 0) return;
         this.unpick();
         this.#invalidateCtx();
-        bubbleEvent<PickDetail>(this, "babylon.dropped", { state: "dropped", mesh: mesh.id });
+        queueEvent<PickDetail>(this, "babylon.dropped", { state: "dropped", mesh: mesh.id });
     }
 }
