@@ -49,27 +49,26 @@ export class MyArcCameraElem extends ReactiveElement {
     @property({ type: Boolean })
     autoSpin = false;
 
-    protected override shouldUpdate(_changes: PropertyValues): boolean {
-        return this.ctx != null;
-    }
-
-    override update(changes: PropertyValues) {
-        if (!this.hasUpdated) this.#create();
-        else {
-            if ((changes.has("ctx") || changes.has("autoZoom")) && this.autoZoom) this.reframe();
-            if ((changes.has("pick")|| changes.has("autoFocus")) && this.autoFocus) {
-                if (this.pick) this.refocus();
-                else this.reset();
+    override connectedCallback(): void {
+        super.connectedCallback();
+        this.#init();
+        this._camera.onEnabledStateChangedObservable.add(() => {
+            if (this._camera.isEnabled()) {
+                this._camera.useAutoRotationBehavior = this.autoSpin;
+                this._camera.attachControl(); 
+            } else { 
+                this._camera.useAutoRotationBehavior = false;
+                this._camera.detachControl();
             }
-            if (changes.has("autoSpin")) this._camera.useAutoRotationBehavior = this.autoSpin;
-        }
-        super.update(changes);
+        });
+        this._camera.setEnabled(true);
+        this.ctx!.scene.activeCamera = this._camera;
     }
 
     _camera!: ArcRotateCamera;
 
-    #create() {
-        debug(this, "creating");
+    #init() {
+        debug(this, "initializing");
         const scene = this.ctx!.scene;
         const radius = 0.5 * this.ctx!.worldSize;
         this._camera = new ArcRotateCamera("(Camera)", Tools.ToRadians(this.initAlpha), Tools.ToRadians(this.initBeta), radius, Vector3.Zero(), scene);
@@ -80,18 +79,6 @@ export class MyArcCameraElem extends ReactiveElement {
         this._camera.upperRadiusLimit = radius;
         this._camera.wheelDeltaPercentage = 0.01; // ??
         this._camera.useNaturalPinchZoom = true;
-
-        this._camera.onEnabledStateChangedObservable.add(() => {
-            if (this._camera.isEnabled()) {
-                this._camera.useAutoRotationBehavior = this.autoSpin;
-                this._camera.attachControl(); 
-            } else { 
-                this._camera.useAutoRotationBehavior = false;
-                this._camera.detachControl();
-            }
-        });
-        scene.activeCamera = this._camera;
-        this._camera.setEnabled(true);
     }
 
     #adjust(params: { alpha?: number; beta?: number; radius?: number; target?: Vector3 }) {
@@ -100,8 +87,7 @@ export class MyArcCameraElem extends ReactiveElement {
         const beta = params.beta ?? this._camera.beta;
         const radius = params.radius ?? this._camera.radius;
         const target = params.target ?? this._camera.target;
-        this._camera.lowerRadiusLimit = 0.5 * radius;
-        this._camera.upperRadiusLimit = 1.5 * radius;
+        this._camera.lowerRadiusLimit = radius * 0.5;
         this._camera.interpolateTo(alpha, beta, radius, target);
     }
 
@@ -138,5 +124,15 @@ export class MyArcCameraElem extends ReactiveElement {
         const beta = ComputeBeta(vector.y, radius)  
         debug(this, "refocusing");
         this.#adjust({target, radius, alpha, beta});
+    }
+
+    override update(changes: PropertyValues) {
+        if ((changes.has("ctx") || changes.has("autoZoom")) && this.autoZoom) this.reframe();
+        if ((changes.has("pick")|| changes.has("autoFocus")) && this.autoFocus) {
+            if (this.pick) this.refocus();
+            else this.reset();
+        }
+        if (changes.has("autoSpin")) this._camera.useAutoRotationBehavior = this.autoSpin;
+        super.update(changes);
     }
 }
