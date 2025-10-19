@@ -3,7 +3,7 @@ import { ReactiveElement, type PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
 import { Texture } from "@babylonjs/core/Materials/Textures/texture";
-import { Color3, Vector2, Vector3 } from "@babylonjs/core/Maths";
+import { Color3, Vector2 } from "@babylonjs/core/Maths";
 import { CreateGround } from "@babylonjs/core/Meshes/Builders/groundBuilder";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
