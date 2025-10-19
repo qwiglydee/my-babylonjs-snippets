@@ -12,8 +12,8 @@ import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
 import { sceneCtx, utilsCtx, type SceneCtx } from "./context";
 import { assertNonNull } from "./utils/asserts";
 import { debug } from "./utils/debug";
+import type { Nullable } from "@babylonjs/core/types";
 
-const GROUND_TXT = new URL("./assets/ground.png?inline", import.meta.url);
 
 @customElement("my-ground")
 export class MyGroundElem extends ReactiveElement {
@@ -23,6 +23,9 @@ export class MyGroundElem extends ReactiveElement {
 
     @consume({ context: utilsCtx, subscribe: false })
     utils!: Scene;
+
+    @property()
+    src: Nullable<string> = null;
 
     /** use primary scene instead of utils */
     @property({ type: Boolean })
@@ -47,6 +50,7 @@ export class MyGroundElem extends ReactiveElement {
     _size: number = 0;
 
     override connectedCallback(): void {
+        assertNonNull(this.src, `${this.tagName}.src is required`)
         super.connectedCallback();
         this.#init();
     }
@@ -62,8 +66,7 @@ export class MyGroundElem extends ReactiveElement {
         this._material = new GridMaterial("(Ground)", scene);
         this._material.majorUnitFrequency = 8;
         this._material.backFaceCulling = false;
-        this._material.opacityTexture = new Texture(GROUND_TXT.href, scene);
-
+        this._material.opacityTexture = new Texture(this.src, scene);
 
         this._ground = CreateGround("(Ground)", { width: 1.0, height: 1.0, subdivisions: 1 }, scene);
         if (this.real) this.ctx.scene.markAux(this._ground);

@@ -32,8 +32,7 @@ export class MyArcCameraElem extends ReactiveElement {
     defaultBeta: number = 45;
 
     @property({ type: Number })
-    defaultRadius: number = 45;
-
+    defaultRadius: number = 10;
 
     override connectedCallback(): void {
         super.connectedCallback();

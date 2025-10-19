@@ -55,8 +55,8 @@
         <our-app class="p-0 border rounded-3">
             <my-babylon picking dragging highlighting>
                 <my-camera-arc autoSpin autoZoom autoFocus focusFactor="0.5"></my-camera-arc>
-                <my-environ sky skyIntens="0.1" skyBlur="0.75"></my-environ>
-                <my-ground autoSize></my-ground>
+                <my-environ src="assets/studio.env" sky skyIntens="0.25" skyBlur="0.25"></my-environ>
+                <my-ground src="assets/ground.png" autoSize></my-ground>
                 <my-stuff radius="4" count="3" shuffling></my-stuff>
 
                 <div slot="overlay" style="position: absolute; top: 4px; left: 4px">
@@ -112,7 +112,7 @@
                 console.debug(e.type, e.detail);
             });
 
-            setTimeout(() => my.stuff.createItem(), 3000);
+            setTimeout(() => my.stuff?.createItem(), 3000);
         </script>
 
         <script type="module">
