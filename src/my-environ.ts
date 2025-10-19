@@ -4,15 +4,33 @@ import { customElement, property } from "lit/decorators.js";
 
 import "@babylonjs/core/Helpers/sceneHelpers";
 import { BackgroundMaterial } from "@babylonjs/core/Materials/Background/backgroundMaterial";
-import { CubeTexture } from "@babylonjs/core/Materials/Textures/cubeTexture";
+import { CubeTexture, type ICubeTextureCreationOptions } from "@babylonjs/core/Materials/Textures/cubeTexture";
 import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Nullable } from "@babylonjs/core/types";
 
 import { sceneCtx, type SceneCtx } from "./context";
+import type { Scene } from "@babylonjs/core/scene";
+import { debug } from "./utils/debug";
 
 const DEFAULT_ENV = new URL("./assets/studio.env?inline", import.meta.url);
+
+
+async function loadCubeTexture(url: string, scene: Scene, options: ICubeTextureCreationOptions): Promise<CubeTexture> {
+    return new Promise((resolve, reject) => {
+        let txt: CubeTexture;
+        txt = new CubeTexture(
+            url, scene, {
+                ...options,
+                noMipmap: true,
+                onLoad() { resolve(txt); },
+                onError(msg, _exc) { reject(msg)},
+            }
+        )
+        console.debug(txt);
+    });
+}
 
 @customElement("my-environ")
 export class MyEnvironElem extends ReactiveElement {
@@ -42,9 +60,9 @@ export class MyEnvironElem extends ReactiveElement {
         this.#init();
     }
 
-    #init() {
-        this.#initEnv();
-        if (this.sky) this.#initSky();
+    async #init() {
+        await this.#initEnv();
+        if (this.sky) await this.#initSky();
     }
 
 
@@ -53,18 +71,20 @@ export class MyEnvironElem extends ReactiveElement {
     _skyMat: Nullable<BackgroundMaterial> = null;
     _skyBox: Nullable<Mesh> = null;
 
-    #initEnv() {
+    async #initEnv() {
+        debug(this, "initializing env", { src: this.src });
         const scene = this.ctx!.scene;
         
         if (this.src) {
-            this._envTxt = new CubeTexture(this.src, scene);
+            this._envTxt = await loadCubeTexture(this.src, scene, {});
         } else {
-            this._envTxt = new CubeTexture(DEFAULT_ENV.href, scene, { forcedExtension: ".env" });
+            this._envTxt = await loadCubeTexture(DEFAULT_ENV.href, scene, { forcedExtension: ".env" });
         }
         scene.environmentTexture = this._envTxt;
     }
 
-    #initSky() {
+    async #initSky() {
+        debug(this, "initializing sky", { src: this.src });
         const scene = this.ctx.scene;
 
         this._skyTxt = this._envTxt!.clone();
