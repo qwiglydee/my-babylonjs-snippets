@@ -31,39 +31,10 @@ export class MyStuffElem extends ReactiveElement {
     @property({ type: Number })
     count = 3;
 
-    @property({ type: Boolean })
-    shuffling = false;
-
     override connectedCallback(): void {
         super.connectedCallback();
         this.#init();
-        this.#initShuffling();
         this.#create();
-    }
-
-    #initShuffling() {
-        const scene = this.ctx!.scene;
-        scene.onKeyboardObservable.add((info: KeyboardInfo) => {
-            let selected = this.pick?.pickedMesh;
-            if (!selected) return;
-            if (info.type != KeyboardEventTypes.KEYDOWN && "gsr".includes(info.event.key)) {
-                switch (info.event.key) {
-                    case "g":
-                        selected.position.x = (Math.random() * 2 - 1) * this.radius;
-                        selected.position.z = (Math.random() * 2 - 1) * this.radius;
-                        break;
-                    case "s":
-                        selected.scaling.x = (Math.random() * 0.75 + 0.25) * this.size;
-                        selected.scaling.z = (Math.random() * 0.75 + 0.25) * this.size;
-                        break;
-                    case "r":
-                        selected.rotation.z = (Math.random() * 2 + 1) * Math.PI;
-                        selected.rotation.x = (Math.random() * 2 + 1) * Math.PI;
-                        break;
-                }
-                scene.onModelUpdatedObservable.notifyObservers([selected]);
-            }
-        });
     }
 
     #randomLoc() {

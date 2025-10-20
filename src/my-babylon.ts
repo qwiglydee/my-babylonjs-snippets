@@ -1,25 +1,26 @@
 import { provide } from "@lit/context";
 import { css, html, ReactiveElement, render, type PropertyValues } from "lit";
-import { customElement, property, query, state } from "lit/decorators.js";
+import { customElement, property, query, standardProperty, state } from "lit/decorators.js";
 
-import { PointerDragBehavior } from "@babylonjs/core/Behaviors/Meshes/pointerDragBehavior";
 import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
 import { AxesViewer } from "@babylonjs/core/Debug/axesViewer";
 import { Engine } from "@babylonjs/core/Engines/engine";
 import type { EngineOptions } from "@babylonjs/core/Engines/thinEngine";
-import { PointerEventTypes, PointerInfo } from "@babylonjs/core/Events/pointerEvents";
 import "@babylonjs/core/Layers/effectLayerSceneComponent";
-import { HighlightLayer } from "@babylonjs/core/Layers/highlightLayer";
-import { Color3, Color4, Vector3 } from "@babylonjs/core/Maths";
+import { Color4 } from "@babylonjs/core/Maths";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
 import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
 
-import { pickCtx, sceneCtx, utilsCtx, type PickDetail, type SceneCtx } from "./context";
+import { BabylonController, type BabylonExtendedElem } from "./behaviors/base";
+import { HighlightingController } from "./behaviors/highlighting";
+import { MovingController } from "./behaviors/moving";
+import { PickingController } from "./behaviors/picking";
+import { ShufflingController } from "./behaviors/shuffling";
+import { pickCtx, sceneCtx, utilsCtx, type BabylonElem, type PickDetail, type SceneCtx } from "./context";
 import { MyScene } from "./scene";
-import { assertNonNull } from "./utils/asserts";
-import { debug } from "./utils/debug";
+import { debug, debugChanges } from "./utils/debug";
 import { queueEvent } from "./utils/events";
 
 const ENGOPTIONS: EngineOptions = {
@@ -42,19 +43,11 @@ export class MyBabylonElem extends ReactiveElement {
     utils!: Scene;
 
     @provide({ context: pickCtx })
+    @state() // updated by behaviors
     pick: Nullable<PickingInfo> = null;
 
     @property({ type: Boolean })
     rightHanded = false;
-
-    @property({ type: Boolean })
-    picking = false;
-
-    @property({ type: Boolean })
-    dragging = false;
-
-    @property({ type: Boolean })
-    highlighting = false;
 
     static override styles = css`
         :host {
@@ -70,7 +63,6 @@ export class MyBabylonElem extends ReactiveElement {
             height: 100%;
             z-index: 0;
         }
-
 
         slot[name="overlay"] {
             position: absolute;
@@ -93,11 +85,14 @@ export class MyBabylonElem extends ReactiveElement {
         );
     }
 
-    @query('canvas')
+    @query("canvas")
     canvas!: HTMLCanvasElement;
 
     engine!: Engine;
     scene!: MyScene;
+
+    @state()
+    selected: Nullable<Mesh> = null;
 
     #needresize = true;
     #resizingObs!: ResizeObserver;
@@ -115,6 +110,44 @@ export class MyBabylonElem extends ReactiveElement {
             },
             { threshold: 0.5 }
         );
+    }
+
+    // permanent controller
+    _pickingCtrl = new PickingController(this);
+
+    @property({ type: Boolean })
+    moving = false;
+    _movingCtrl: Nullable<MovingController> = null;
+
+    @property({ type: Boolean })
+    highlighting = false;
+    _highlightingCtrl: Nullable<HighlightingController> = null;
+
+    @property({ type: Boolean })
+    shuffling = false;
+    _shufflingCtrl: Nullable<ShufflingController> = null;
+
+    /** setting up controllers dynamically from property changes  */
+    _toggleCtrl<T extends BabylonController>(ctrl: Nullable<T>,  enable: boolean, Constructor: new (elem: BabylonElem) => T): Nullable<T> {
+        debug(this, "toggling", { ctrl: Constructor.name, enable });
+        if (enable) {
+            ctrl = new Constructor(this);
+            this.addController(ctrl);
+        } else {
+            if (ctrl) this.removeController(ctrl);
+            ctrl = null;
+        }
+        return ctrl;
+    }
+    
+    override addController(ctrl: BabylonController) {
+        super.addController(ctrl);
+        if (this.hasUpdated) ctrl.init();
+    }
+
+    override removeController(ctrl: BabylonController) {
+        ctrl.dispose?.();
+        super.removeController(ctrl);
     }
 
     #startRendering() {
@@ -141,7 +174,7 @@ export class MyBabylonElem extends ReactiveElement {
     _ctx_dirty = true;
 
     #invalidateCtx() {
-        debug(this, 'CTX');
+        debug(this, "CTX");
         this._ctx_dirty = true;
     }
 
@@ -162,9 +195,7 @@ export class MyBabylonElem extends ReactiveElement {
         super.connectedCallback();
         this.#renderHTML();
         this.#init();
-        if (this.picking) this.#initPicking();
-        if (this.dragging) this.#initDragging();
-        if (this.highlighting) this.#initHighlighting();
+        this.addController(this._pickingCtrl);
         this.scene.onModelUpdatedObservable.add(() => this.#invalidateCtx());
         this.#resizingObs.observe(this);
         this.#visibilityObs.observe(this);
@@ -173,7 +204,7 @@ export class MyBabylonElem extends ReactiveElement {
             scene: this.scene,
             world: null,
             bounds: null,
-        }
+        };
     }
 
     override disconnectedCallback(): void {
@@ -193,89 +224,22 @@ export class MyBabylonElem extends ReactiveElement {
         new AxesViewer(this.utils);
     }
 
-    #initPicking() {
-        this.scene.onPointerObservable.add((info: PointerInfo) => {
-            if (info.type == PointerEventTypes.POINTERTAP) {
-                if (info.pickInfo?.pickedMesh) this.onpick(info.pickInfo);
-                else this.unpick();
-            }
-        });
-    }
-
-    _dragBhv: Nullable<PointerDragBehavior> = null;
-    _dragDist = 0;
-    #initDragging() {
-        this._dragBhv = new PointerDragBehavior({ dragPlaneNormal: Vector3.Up() });
-        this._dragBhv.onDragStartObservable.add(() => {
-            this._dragDist = 0;
-            this.ongrabbed(this._dragBhv!.attachedNode as Mesh)
-        });
-        this._dragBhv.onDragEndObservable.add(() => {
-            this.ondropped(this._dragBhv!.attachedNode as Mesh, this._dragDist);
-        });
-        this._dragBhv.onDragObservable.add((data: {dragDistance: number}) => {
-            this._dragDist += data.dragDistance;
-        });
-    }
-
-    _highlighter: Nullable<HighlightLayer> = null;
-    _highloghtColor = Color3.Yellow();
-
-    #initHighlighting() {
-        this._highlighter = new HighlightLayer("highlight", this.scene);
-    }
-
     #dispose() {
         this.scene.dispose();
         this.engine.dispose();
     }
 
     override update(changes: PropertyValues) {
+        if (changes.has("highlighting")) this._highlightingCtrl = this._toggleCtrl(this._highlightingCtrl, this.highlighting, HighlightingController);
+        if (changes.has("moving")) this._movingCtrl = this._toggleCtrl(this._movingCtrl, this.moving, MovingController);
+        if (changes.has("shuffling")) this._shufflingCtrl = this._toggleCtrl(this._shufflingCtrl, this.shuffling, ShufflingController);
         if (changes.has("_ctx_dirty") && this._ctx_dirty) this.#refreshCtx();
         super.update(changes);
     }
 
-    #select(mesh: Mesh) {
-        if (this._dragBhv) this._dragBhv.attach(mesh);
-        if (this._highlighter) this._highlighter.addMesh(mesh, this._highloghtColor);
-    }
-
-    #deselect(mesh: Mesh) {
-        if (this._dragBhv) this._dragBhv.detach();
-        if (this._highlighter) this._highlighter.removeMesh(mesh);
-    }
-
-    _selected: Nullable<Mesh> = null;
-
-    onpick(pickinfo: PickingInfo) {
-        this.pick = pickinfo;
-        if (this._selected === this.pick.pickedMesh) return;
-        assertNonNull(this.pick.pickedMesh);
-
-        if (this._selected) this.#deselect(this._selected);
-        this._selected = this.pick.pickedMesh as Mesh;
-        this.#select(this._selected);
-
-        queueEvent<PickDetail>(this, "babylon.picked", { state: "picked", mesh: this._selected.id });
-    }
-
-    unpick() {
-        if (this._selected) this.#deselect(this._selected);
-        this._selected = null;
-        this.pick = null;
-        queueEvent<PickDetail>(this, "babylon.picked", { mesh: null });
-    }
-
-    ongrabbed(mesh: Mesh) {
-        assertNonNull(mesh);
-        queueEvent<PickDetail>(this, "babylon.grabbed", { state: "dragging", mesh: mesh.id });
-    }
-
-    ondropped(mesh: Mesh, dist: number) {
-        assertNonNull(mesh);
-        if (dist == 0) return;
-        this.unpick();
-        this.#invalidateCtx();
-        queueEvent<PickDetail>(this, "babylon.dropped", { state: "dropped", mesh: mesh.id });
+    override updated(changes: PropertyValues) {
+        if (changes.has("pick")) {
+            queueEvent<PickDetail>(this, "babylon.picked", { state: "picked", mesh: this.pick?.pickedMesh?.id });
+        }
     }
 }

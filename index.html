@@ -53,7 +53,7 @@
 
     <body class="container bg-light">
         <our-app class="p-0 border rounded-3">
-            <my-babylon picking dragging highlighting>
+            <my-babylon picking>
                 <my-camera-arc autoSpin autoZoom autoFocus focusFactor="0.5"></my-camera-arc>
                 <my-environ src="assets/studio.env" sky skyIntens="0.25" skyBlur="0.25"></my-environ>
                 <my-ground src="assets/ground.png" autoSize></my-ground>
@@ -112,7 +112,7 @@
                 console.debug(e.type, e.detail);
             });
 
-            setTimeout(() => my.stuff?.createItem(), 3000);
+            // setTimeout(() => my.stuff?.createItem(), 3000);
         </script>
 
         <script type="module">
