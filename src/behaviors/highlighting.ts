@@ -1,47 +1,39 @@
-import type { ReactiveController } from "lit";
 
 import { HighlightLayer } from "@babylonjs/core/Layers/highlightLayer";
 import { Color3 } from "@babylonjs/core/Maths";
+import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 
-import type { BabylonElement } from "../interface";
 import { debug } from "../utils/debug";
+import { BabylonController } from "./base";
 
-export class HighlightingController implements ReactiveController {
-    host: BabylonElement;
-
+export class HighlightingController extends BabylonController {
     highlighter!: HighlightLayer;
     highloghtColor = Color3.Yellow();
 
-    constructor(host: BabylonElement) {
-        this.host = host;
-    }
-
-    hostConnected(): void {
-        queueMicrotask(() => this.#init()); // after host init scene
-    }
-
-    #init() {
-        this.highlighter = new HighlightLayer("highlight", this.host.scene);
+    init() {
+        this.highlighter = new HighlightLayer("(highlighter)", this.scene);
     }
 
     dispose() {
         this.highlighter.dispose();
     }
 
-    hostDisconnected(): void {
-        this.dispose();
+    updating() {}
+    
+    update(): void {
+        if (this.picked) this.#pick(this.picked);
+        else this.#unpick();
     }
 
-    hostUpdated(): void {
-        if (!this.host.hasUpdated) return;
-        if (this.host.selected) {
-            if (!this.highlighter.hasMesh(this.host.selected)) {
-                debug(this, "highlighing", this.host.selected.id);
-                this.highlighter.removeAllMeshes();
-                this.highlighter.addMesh(this.host.selected, this.highloghtColor);
-            }
-        } else {
+    #pick(mesh: Mesh) {
+        if (!this.highlighter.hasMesh(mesh)) {
+            debug(this, "highlighing", mesh.id);
             this.highlighter.removeAllMeshes();
+            this.highlighter.addMesh(mesh, this.highloghtColor);
         }
+    }
+ 
+    #unpick() {
+        this.highlighter.removeAllMeshes();
     }
 }

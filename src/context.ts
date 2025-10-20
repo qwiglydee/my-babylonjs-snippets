@@ -6,15 +6,22 @@ import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
 
 import type { MyScene } from "./scene";
+import type { ReactiveElement } from "lit";
+
+/**** main app ****/
 
 export interface AppCtx {
     status: string;
     foo: string;
 }
 
-// NB: non nullable
 export const appCtx = createContext<AppCtx>(Symbol('app'));
 
+export interface AppElement {
+    ctx: AppCtx;
+}
+
+/**** babylon stuff ****/
 
 export interface SceneCtx {
     scene: MyScene;
@@ -27,6 +34,13 @@ export const sceneCtx = createContext<SceneCtx>(Symbol('babylon.scene'));
 export const utilsCtx = createContext<Scene>(Symbol('babylon.utils'));
 
 export const pickCtx = createContext<Nullable<PickingInfo>>(Symbol('babylon.pick'))
+
+export interface BabylonElem extends ReactiveElement {
+    ctx: SceneCtx;
+    utils: Scene;
+    pick: Nullable<PickingInfo>;
+}
+
 
 export interface PickDetail {
     mesh?: string;

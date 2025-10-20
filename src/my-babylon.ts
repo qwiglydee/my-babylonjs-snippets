@@ -7,21 +7,20 @@ import { AxesViewer } from "@babylonjs/core/Debug/axesViewer";
 import { Engine } from "@babylonjs/core/Engines/engine";
 import type { EngineOptions } from "@babylonjs/core/Engines/thinEngine";
 import "@babylonjs/core/Layers/effectLayerSceneComponent";
-import { Color4, Vector3 } from "@babylonjs/core/Maths";
+import { Color4 } from "@babylonjs/core/Maths";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
 import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
 import { HighlightingController } from "./behaviors/highlighting";
 import { PickingController } from "./behaviors/picking";
+import { ShufflingController } from "./behaviors/shuffling";
 import { pickCtx, sceneCtx, utilsCtx, type PickDetail, type SceneCtx } from "./context";
 import { MyScene } from "./scene";
 import { assertNonNull } from "./utils/asserts";
 import { debug } from "./utils/debug";
 import { queueEvent } from "./utils/events";
-import { ShufflingController } from "./behaviors/shuffling";
 import { MovingController } from "./behaviors/moving";
-import { PointerDragBehavior } from "@babylonjs/core/Behaviors/Meshes/pointerDragBehavior";
 
 const ENGOPTIONS: EngineOptions = {
     antialias: true,
@@ -43,6 +42,7 @@ export class MyBabylonElem extends ReactiveElement {
     utils!: Scene;
 
     @provide({ context: pickCtx })
+    @state()  // updated by behaviors
     pick: Nullable<PickingInfo> = null;
 
     @property({ type: Boolean })
@@ -125,18 +125,18 @@ export class MyBabylonElem extends ReactiveElement {
     }
     _pickingCtrl: Nullable<PickingController> = null;
 
-    // @property({ type: Boolean })
-    // set moving(enable: boolean) {
-    //     if (enable) {
-    //         this._movingCtrl = new MovingController(this);
-    //         this.addController(this._movingCtrl);
-    //     } else if (this._movingCtrl) {
-    //         this.removeController(this._movingCtrl);
-    //         this._movingCtrl.dispose();
-    //         this._movingCtrl = null;
-    //     }
-    // }
-    // _movingCtrl: Nullable<MovingController> = null;
+    @property({ type: Boolean })
+    set moving(enable: boolean) {
+        if (enable) {
+            this._movingCtrl = new MovingController(this);
+            this.addController(this._movingCtrl);
+        } else if (this._movingCtrl) {
+            this.removeController(this._movingCtrl);
+            this._movingCtrl.dispose();
+            this._movingCtrl = null;
+        }
+    }
+    _movingCtrl: Nullable<MovingController> = null;
 
     @property({ type: Boolean })
     set highlighting(enable: boolean) {
@@ -210,7 +210,6 @@ export class MyBabylonElem extends ReactiveElement {
         super.connectedCallback();
         this.#renderHTML();
         this.#init();
-        this.#initDragging();
         this.scene.onModelUpdatedObservable.add(() => this.#invalidateCtx());
         this.#resizingObs.observe(this);
         this.#visibilityObs.observe(this);
@@ -274,11 +273,8 @@ export class MyBabylonElem extends ReactiveElement {
 
     override updated(changes: PropertyValues) {
         // set/reset by picking ctrl or dragging ctrl
-        if (changes.has("selected")) {
-            assertNonNull(this._pickingCtrl);
-            this.pick = this._pickingCtrl.pickInfo;
-            // if (this.pick?.pickedMesh) this.dragBhv.attach(this.pick?.pickedMesh); else this.dragBhv.detach();
-            queueEvent<PickDetail>(this, "babylon.picked", { state: "picked", mesh: this.selected?.id });
+        if (changes.has("pick")) {
+            queueEvent<PickDetail>(this, "babylon.picked", { state: "picked", mesh: this.pick?.pickedMesh?.id});
         }
     }
 }

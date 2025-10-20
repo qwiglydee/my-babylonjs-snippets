@@ -1,62 +1,50 @@
-import type { ReactiveController } from "lit";
-
 import { PointerDragBehavior } from "@babylonjs/core/Behaviors/Meshes/pointerDragBehavior";
 import { Vector3 } from "@babylonjs/core/Maths";
-
-import type { BabylonElement } from "../interface";
+import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { debug } from "../utils/debug";
+import { BabylonController } from "./base";
 
-export class MovingController implements ReactiveController {
-    host: BabylonElement;
-
+export class MovingController extends BabylonController {
     dragBhv!: PointerDragBehavior;
     dragDist = 0;
 
-    constructor(host: BabylonElement) {
-        this.host = host;
-    }
-
-    hostConnected(): void {
-        this.#init();
-    }
-
-    #init() {
+    init() {
         this.dragBhv = new PointerDragBehavior({ dragPlaneNormal: Vector3.Up() });
         this.dragBhv.onDragStartObservable.add(() => {
             debug(this, "drag started", this.dragDist);
             this.dragDist = 0;
         });
-        this.dragBhv.onDragObservable.add((data: {dragDistance: number}) => {
+        this.dragBhv.onDragObservable.add((data: { dragDistance: number }) => {
             this.dragDist += data.dragDistance;
             debug(this, "dragging", this.dragDist);
         });
         this.dragBhv.onDragEndObservable.add(() => {
             debug(this, "drag ended", this.dragDist);
             if (this.dragDist > 0) {
-                this.host.scene.onModelUpdatedObservable.notifyObservers([this.dragBhv.attachedNode]);
+                this.scene.onModelUpdatedObservable.notifyObservers([this.dragBhv.attachedNode]);
             }
-            this.host.selected = null;
+            this.host.pick = null;
             this.host.requestUpdate();
         });
     }
 
-    dispose() {
+    dispose() {}
+
+    updating() {}
+
+    update(): void {
+        if (this.picked) this.#pick(this.picked);
+        else this.#unpick();
     }
 
-    hostDisconnected(): void {
-        this.dispose();
-    }
-
-    hostUpdated(): void {
-        if (!this.host.hasUpdated) return;
-        if (this.host.selected) {
-            if (this.dragBhv.attachedNode !== this.host.selected) {
-                debug(this, "grabbing", this.host.selected.id);
-                this.dragBhv.attachedNode = this.host.selected;
-            }
-        } else {
-            this.dragBhv.detach();
+    #pick(mesh: Mesh) {
+        if (this.dragBhv.attachedNode !== mesh) {
+            debug(this, "grabbing", mesh.id);
+            this.dragBhv.attach(mesh);
         }
     }
 
+    #unpick() {
+        this.dragBhv.detach();
+    }
 }

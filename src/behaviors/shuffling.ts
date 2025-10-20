@@ -2,16 +2,24 @@ import type { ReactiveController } from "lit";
 
 import { KeyboardEventTypes, type KeyboardInfo } from "@babylonjs/core/Events/keyboardEvents";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
-import type { BabylonElement } from "../interface";
 import { debug } from "../utils/debug";
+import type { BabylonElem } from "../context";
+import type { Nullable } from "@babylonjs/core/types";
 
 export class ShufflingController implements ReactiveController {
-    host: BabylonElement;
+    host: BabylonElem;
 
     radius: number = 3;
 
-    constructor(host: BabylonElement) {
+    constructor(host: BabylonElem) {
         this.host = host;
+    }
+
+    get scene() {
+        return this.host!.ctx.scene;
+    }
+    get picked(): Nullable<Mesh> {
+        return this.host.pick?.pickedMesh ? (this.host.pick?.pickedMesh as Mesh) : null;
     }
 
     hostConnected(): void {
@@ -19,35 +27,34 @@ export class ShufflingController implements ReactiveController {
     }
 
     #init() {
-        this.host.scene.onKeyboardObservable.add((info: KeyboardInfo) => {
-            if (this.host.selected && info.type != KeyboardEventTypes.KEYDOWN) this.#shuffle(this.host.selected, info);
+        this.scene.onKeyboardObservable.add((info: KeyboardInfo) => {
+            if (info.type == KeyboardEventTypes.KEYDOWN && this.picked) this.#shuffle(this.picked, info.event.key);
         });
     }
 
-    dispose() {
-    }
+    dispose() {}
 
     hostDisconnected(): void {
         this.dispose();
     }
 
-    #shuffle(selected: Mesh, info: KeyboardInfo) {
-        if (!"gsr".includes(info.event.key)) return;
-        debug(this, "shuffling", selected);
-        switch (info.event.key) {
+    #shuffle(mesh: Mesh, key: string) {
+        if (!"gsr".includes(key)) return;
+        debug(this, "shuffling", mesh.id);
+        switch (key) {
             case "g":
-                selected.position.x += (Math.random() * 2 - 1) * this.radius;
-                selected.position.z += (Math.random() * 2 - 1) * this.radius;
+                mesh.position.x += (Math.random() * 2 - 1) * this.radius;
+                mesh.position.z += (Math.random() * 2 - 1) * this.radius;
                 break;
             case "s":
-                selected.scaling.x *= (Math.random() + 0.51);
-                selected.scaling.z *= (Math.random() + 0.51);
+                mesh.scaling.x *= Math.random() + 0.51;
+                mesh.scaling.z *= Math.random() + 0.51;
                 break;
             case "r":
-                selected.rotation.z = (Math.random() * 2 - 1) * Math.PI;
-                selected.rotation.x = (Math.random() * 2 - 1) * Math.PI;
+                mesh.rotation.z = (Math.random() * 2 - 1) * Math.PI;
+                mesh.rotation.x = (Math.random() * 2 - 1) * Math.PI;
                 break;
         }
-        this.host.scene.onModelUpdatedObservable.notifyObservers([selected]);
+        this.scene.onModelUpdatedObservable.notifyObservers([mesh]);
     }
 }
