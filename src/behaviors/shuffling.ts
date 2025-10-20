@@ -1,42 +1,26 @@
-import type { ReactiveController } from "lit";
-
 import { KeyboardEventTypes, type KeyboardInfo } from "@babylonjs/core/Events/keyboardEvents";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
+
 import { debug } from "../utils/debug";
-import type { BabylonElem } from "../context";
-import type { Nullable } from "@babylonjs/core/types";
+import { BabylonController } from "./base";
 
-export class ShufflingController implements ReactiveController {
-    host: BabylonElem;
-
+export class ShufflingController extends BabylonController {
     radius: number = 3;
 
-    constructor(host: BabylonElem) {
-        this.host = host;
-    }
+    #obs: any;
 
-    get scene() {
-        return this.host!.ctx.scene;
-    }
-    get picked(): Nullable<Mesh> {
-        return this.host.pick?.pickedMesh ? (this.host.pick?.pickedMesh as Mesh) : null;
-    }
-
-    hostConnected(): void {
-        queueMicrotask(() => this.#init()); // after host init scene
-    }
-
-    #init() {
-        this.scene.onKeyboardObservable.add((info: KeyboardInfo) => {
+    init() {
+        this.#obs = this.scene.onKeyboardObservable.add((info: KeyboardInfo) => {
             if (info.type == KeyboardEventTypes.KEYDOWN && this.picked) this.#shuffle(this.picked, info.event.key);
         });
     }
 
-    dispose() {}
-
-    hostDisconnected(): void {
-        this.dispose();
+    dispose() {
+        if (this.#obs) this.#obs.remove();
     }
+    
+    updating() {}
+    update() {}
 
     #shuffle(mesh: Mesh, key: string) {
         if (!"gsr".includes(key)) return;

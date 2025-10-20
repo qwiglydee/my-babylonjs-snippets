@@ -5,6 +5,9 @@ import type { Nullable } from "@babylonjs/core/types";
 
 import type { BabylonElem } from "../context";
 
+export interface BabylonExtendedElem extends BabylonElem {
+    [key: string]: any;
+}
 
 export abstract class BabylonController implements ReactiveController {
     host: BabylonElem;
@@ -18,12 +21,7 @@ export abstract class BabylonController implements ReactiveController {
     }
 
     get picked(): Nullable<Mesh> {
-        return this.host.pick?.pickedMesh ? (this.host.pick?.pickedMesh as Mesh) : null;
-    }
-
-    hostConnected(): void {
-        // pospone until host elem initialized scene and stuff 
-        queueMicrotask(() => this.init());
+        return this.host?.pick?.pickedMesh ? (this.host.pick.pickedMesh as Mesh) : null;
     }
 
     hostDisconnected(): void {
@@ -35,8 +33,7 @@ export abstract class BabylonController implements ReactiveController {
     }
 
     hostUpdated(): void {
-        if (!this.host.hasUpdated) return; // skip first update
-        this.update();
+        if (!this.host.hasUpdated) this.init(); else this.update();
     }
 
     /** initialize stuff (after bbylon context created) */
@@ -48,3 +45,4 @@ export abstract class BabylonController implements ReactiveController {
     /** after host updated: reflect changes */
     abstract update(): void;
 }
+

@@ -1,4 +1,3 @@
-
 import { HighlightLayer } from "@babylonjs/core/Layers/highlightLayer";
 import { Color3 } from "@babylonjs/core/Maths";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
@@ -19,7 +18,7 @@ export class HighlightingController extends BabylonController {
     }
 
     updating() {}
-    
+
     update(): void {
         if (this.picked) this.#pick(this.picked);
         else this.#unpick();
@@ -32,7 +31,7 @@ export class HighlightingController extends BabylonController {
             this.highlighter.addMesh(mesh, this.highloghtColor);
         }
     }
- 
+
     #unpick() {
         this.highlighter.removeAllMeshes();
     }

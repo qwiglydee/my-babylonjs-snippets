@@ -11,15 +11,12 @@ export class MovingController extends BabylonController {
     init() {
         this.dragBhv = new PointerDragBehavior({ dragPlaneNormal: Vector3.Up() });
         this.dragBhv.onDragStartObservable.add(() => {
-            debug(this, "drag started", this.dragDist);
             this.dragDist = 0;
         });
         this.dragBhv.onDragObservable.add((data: { dragDistance: number }) => {
             this.dragDist += data.dragDistance;
-            debug(this, "dragging", this.dragDist);
         });
         this.dragBhv.onDragEndObservable.add(() => {
-            debug(this, "drag ended", this.dragDist);
             if (this.dragDist > 0) {
                 this.scene.onModelUpdatedObservable.notifyObservers([this.dragBhv.attachedNode]);
             }
