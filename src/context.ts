@@ -1,12 +1,5 @@
-import { createContext } from "@lit/context";
-
-import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
-import type { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
-import type { Scene } from "@babylonjs/core/scene";
-import type { Nullable } from "@babylonjs/core/types";
-
-import type { MyScene } from "./scene";
 import type { ReactiveElement } from "lit";
+import { createContext } from "@lit/context";
 
 /**** main app ****/
 
@@ -21,7 +14,24 @@ export interface AppElement {
     ctx: AppCtx;
 }
 
+/**** shared  ****/
+
+export interface PickDetail {
+    mesh?: string;
+    state?: string;
+}
+export type PickEvent = CustomEvent<PickDetail>;
+
+
 /**** babylon stuff ****/
+
+import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
+import type { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
+import type { Scene } from "@babylonjs/core/scene";
+import type { Nullable } from "@babylonjs/core/types";
+
+import type { MyScene } from "./scene";
+
 
 export interface SceneCtx {
     scene: MyScene;
@@ -41,9 +51,3 @@ export interface BabylonElem extends ReactiveElement {
     pick: Nullable<PickingInfo>;
 }
 
-
-export interface PickDetail {
-    mesh?: string;
-    state?: string;
-}
-export type PickEvent = CustomEvent<PickDetail>;
