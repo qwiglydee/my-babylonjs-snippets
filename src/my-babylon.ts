@@ -1,6 +1,6 @@
 import { provide } from "@lit/context";
 import { css, html, ReactiveElement, render, type PropertyValues } from "lit";
-import { customElement, property, query, standardProperty, state } from "lit/decorators.js";
+import { customElement, property, query, state } from "lit/decorators.js";
 
 import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
 import { AxesViewer } from "@babylonjs/core/Debug/axesViewer";
@@ -13,14 +13,14 @@ import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRend
 import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
 
-import { BabylonController, type BabylonExtendedElem } from "./behaviors/base";
-import { HighlightingController } from "./behaviors/highlighting";
-import { MovingController } from "./behaviors/moving";
-import { PickingController } from "./behaviors/picking";
-import { ShufflingController } from "./behaviors/shuffling";
 import { pickCtx, sceneCtx, utilsCtx, type BabylonElem, type PickDetail, type SceneCtx } from "./context";
+import { BabylonController } from "./controllers/base";
+import { HighlightingController } from "./controllers/highlighting";
+import { MovingController } from "./controllers/moving";
+import { PickingController } from "./controllers/picking";
+import { ShufflingController } from "./controllers/shuffling";
 import { MyScene } from "./scene";
-import { debug, debugChanges } from "./utils/debug";
+import { debug } from "./utils/debug";
 import { queueEvent } from "./utils/events";
 
 const ENGOPTIONS: EngineOptions = {
