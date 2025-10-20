@@ -29,7 +29,7 @@ export const utilsCtx = createContext<Scene>(Symbol('babylon.utils'));
 export const pickCtx = createContext<Nullable<PickingInfo>>(Symbol('babylon.pick'))
 
 export interface PickDetail {
-    mesh: Nullable<string>;
+    mesh?: string;
     state?: string;
 }
 export type PickEvent = CustomEvent<PickDetail>;
