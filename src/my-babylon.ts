@@ -7,7 +7,7 @@ import { AxesViewer } from "@babylonjs/core/Debug/axesViewer";
 import { Engine } from "@babylonjs/core/Engines/engine";
 import type { EngineOptions } from "@babylonjs/core/Engines/thinEngine";
 import "@babylonjs/core/Layers/effectLayerSceneComponent";
-import { Color4 } from "@babylonjs/core/Maths";
+import { Color4, Vector3 } from "@babylonjs/core/Maths";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
 import type { Scene } from "@babylonjs/core/scene";
@@ -22,6 +22,7 @@ import { ShufflingController } from "./controllers/shuffling";
 import { MyScene } from "./scene";
 import { debug } from "./utils/debug";
 import { queueEvent } from "./utils/events";
+import { ShapeFactory } from "./factory";
 
 const ENGOPTIONS: EngineOptions = {
     antialias: true,
@@ -241,5 +242,28 @@ export class MyBabylonElem extends ReactiveElement {
         if (changes.has("pick")) {
             queueEvent<PickDetail>(this, "babylon.picked", { state: "picked", mesh: this.pick?.pickedMesh?.id });
         }
+    }
+
+    // TODO: move to controller
+
+    _factory: Nullable<ShapeFactory> = null;
+
+    override ondragenter = (ev: DragEvent) => {
+        ev.preventDefault();
+        this._factory = new ShapeFactory(this.scene, { shape: 'ball' });
+    }
+
+    override ondragleave = (event: DragEvent) => {
+        event.preventDefault();
+        this._factory = null;
+    }
+
+    override ondragover = (ev: DragEvent) => {
+        ev.preventDefault();
+    } 
+
+    override ondrop = (ev: DragEvent) => {
+        ev.preventDefault();
+        this._factory?.createEntity(Vector3.Zero());
     }
 }

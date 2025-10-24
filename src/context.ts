@@ -10,14 +10,6 @@ export interface AppCtx {
 
 export const appCtx = createContext<AppCtx>(Symbol('app'));
 
-export interface ShapeParams {
-    label: string;
-    shape: string;
-    size: number;
-}
-
-export const draggingCtx = createContext<Nullable<ShapeParams>>(Symbol('app.dragging'))
-
 export interface AppElement {
     ctx: AppCtx;
 }
@@ -28,8 +20,17 @@ export interface PickDetail {
     mesh?: string;
     state?: string;
 }
+
 export type PickEvent = CustomEvent<PickDetail>;
 
+
+export interface ShapeParams {
+    label?: string;
+    shape: "box" | "ball" | "diamond";
+    size?: number;
+}
+
+export const draggingCtx = createContext<Nullable<ShapeParams>>(Symbol('app.dragging'))
 
 /**** babylon stuff ****/
 
