@@ -6,6 +6,7 @@ import { createContext } from "@lit/context";
 export interface AppCtx {
     status: string;
     foo: string;
+    dragging: Nullable<ShapeParams>;
 }
 
 export const appCtx = createContext<AppCtx>(Symbol('app'));

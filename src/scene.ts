@@ -32,6 +32,10 @@ export class MyScene extends Scene {
         if (this.#nonAuxFilter(mesh)) this.onModelUpdatedObservable.notifyObservers([mesh]);
     };
 
+    getModelMeshes() {
+        return this.meshes.filter(this.#nonAuxFilter);
+    }
+
     /** bounding box of all model meshes */
     getModelBounds(): Nullable<BoundingBox> {
         const stuff = this.meshes.filter(this.#nonAuxFilter);

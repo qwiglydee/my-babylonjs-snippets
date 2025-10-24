@@ -1,4 +1,4 @@
-import { provide } from "@lit/context";
+import { consume, provide } from "@lit/context";
 import { css, html, ReactiveElement, render, type PropertyValues } from "lit";
 import { customElement, property, query, state } from "lit/decorators.js";
 
@@ -13,7 +13,7 @@ import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRend
 import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
 
-import { pickCtx, sceneCtx, utilsCtx, type BabylonElem, type PickDetail, type SceneCtx } from "./context";
+import { pickCtx, sceneCtx, utilsCtx, draggingCtx, type BabylonElem, type PickDetail, type SceneCtx, type ShapeParams } from "./context";
 import { BabylonController } from "./controllers/base";
 import { HighlightingController } from "./controllers/highlighting";
 import { MovingController } from "./controllers/moving";
@@ -46,6 +46,9 @@ export class MyBabylonElem extends ReactiveElement {
     @provide({ context: pickCtx })
     @state() // updated by behaviors
     pick: Nullable<PickingInfo> = null;
+
+    @consume({ context: draggingCtx, subscribe: true })
+    dragging: Nullable<ShapeParams> = null;
 
     @property({ type: Boolean })
     rightHanded = false;
@@ -250,11 +253,13 @@ export class MyBabylonElem extends ReactiveElement {
 
     override ondragenter = (ev: DragEvent) => {
         ev.preventDefault();
-        this._factory = new ShapeFactory(this.scene, { shape: 'ball' });
+        if (!this.dragging) return;
+        this._factory = new ShapeFactory(this.scene, this.dragging);
     }
 
     override ondragleave = (event: DragEvent) => {
         event.preventDefault();
+        if (!this.dragging) return;
         this._factory = null;
     }
 
@@ -264,6 +269,7 @@ export class MyBabylonElem extends ReactiveElement {
 
     override ondrop = (ev: DragEvent) => {
         ev.preventDefault();
+        if (!this._factory) return;
         this._factory?.createEntity(Vector3.Zero());
     }
 }
