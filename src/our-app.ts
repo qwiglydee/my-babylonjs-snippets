@@ -2,8 +2,9 @@ import { ReactiveElement, type PropertyValues } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { provide } from "@lit/context";
 
-import { type AppCtx, appCtx, type PickEvent } from "./context";
+import { type AppCtx, appCtx, draggingCtx, type PickEvent, type ShapeParams } from "./context";
 import { debug, debugChanges } from "./utils/debug";
+import type { Nullable } from "@babylonjs/core/types";
 
 /**
  * Babylon-unaware web app
@@ -13,6 +14,10 @@ import { debug, debugChanges } from "./utils/debug";
 export class OurAppElem extends ReactiveElement {
     @provide({ context: appCtx })
     ctx!: AppCtx;
+
+    @provide({ context: draggingCtx })
+    dragging: Nullable<ShapeParams> = null;
+
 
     #updateCtx(props: object) {
         this.ctx = { ...this.ctx, ...props};
@@ -52,9 +57,17 @@ export class OurAppElem extends ReactiveElement {
     onbabylonpick = (e: PickEvent) => {
         const { state, mesh } = e.detail;
         if (!state) this.#updateCtx({status: "..."});
-        else if (state == 'picked') {
-            if(mesh) this.#updateCtx({status: `Picked: ${mesh}`});
-            else this.#updateCtx({status: "..."});
-        }
+        else if (state == 'picked') this.#updateCtx({status: `Picked: ${mesh}`});
     }
+
+    override ondragstart = (event: DragEvent) => {
+        this.dragging = JSON.parse(event.dataTransfer!.getData('text/plain'));
+        this.#updateCtx({ status: `Dragging ${this.dragging!.label}...`})
+    }
+
+    override ondragend = (event: DragEvent) => {
+        this.dragging = null;
+        this.#updateCtx({ status: "..." });
+    }
+
 } 

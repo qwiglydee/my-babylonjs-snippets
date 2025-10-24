@@ -28,11 +28,20 @@
 
             our-status {
                 position: absolute;
+                z-index: 5;
                 display: block;
                 width: 100%;
                 min-height: 1rem;
                 bottom: 0;
-                background-color: var(--bs-light);
+                background-color: var(--bs-dark);
+                color: white;
+            }
+
+            our-stuff {
+                position: absolute;
+                z-index: 5;
+                left: 0;
+                height: 100%;                
             }
 
             my-babylon {
@@ -76,6 +85,7 @@
                     </svg>
                 </div>
             </my-babylon>
+            <our-stuff></our-stuff>
             <our-status></our-status>
         </our-app>
 

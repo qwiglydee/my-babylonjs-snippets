@@ -10,6 +10,14 @@ export interface AppCtx {
 
 export const appCtx = createContext<AppCtx>(Symbol('app'));
 
+export interface ShapeParams {
+    label: string;
+    shape: string;
+    size: number;
+}
+
+export const draggingCtx = createContext<Nullable<ShapeParams>>(Symbol('app.dragging'))
+
 export interface AppElement {
     ctx: AppCtx;
 }
