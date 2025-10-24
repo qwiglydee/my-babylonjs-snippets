@@ -4,7 +4,7 @@ import minifyHTML from '@lit-labs/rollup-plugin-minify-html-literals';
 import * as info from "./package.json";
 
 export default defineConfig({
-  base: "",
+  appType: "mpa",
   plugins: [
     minifyHTML(),
   ],
