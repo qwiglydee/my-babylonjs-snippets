@@ -23,6 +23,7 @@ import { MyScene } from "./scene";
 import { debug } from "./utils/debug";
 import { queueEvent } from "./utils/events";
 import { ShapeFactory } from "./factory";
+import { DroppingController } from "./controllers/dragndrop";
 
 const ENGOPTIONS: EngineOptions = {
     antialias: true,
@@ -131,6 +132,8 @@ export class MyBabylonElem extends ReactiveElement {
     shuffling = false;
     _shufflingCtrl: Nullable<ShufflingController> = null;
 
+    _droppingCtrl = new DroppingController(this);
+
     /** setting up controllers dynamically from property changes  */
     _toggleCtrl<T extends BabylonController>(ctrl: Nullable<T>,  enable: boolean, Constructor: new (elem: BabylonElem) => T): Nullable<T> {
         debug(this, "toggling", { ctrl: Constructor.name, enable });
@@ -200,6 +203,7 @@ export class MyBabylonElem extends ReactiveElement {
         this.#renderHTML();
         this.#init();
         this.addController(this._pickingCtrl);
+        this.addController(this._droppingCtrl);
         this.scene.onModelUpdatedObservable.add(() => this.#invalidateCtx());
         this.#resizingObs.observe(this);
         this.#visibilityObs.observe(this);
@@ -245,31 +249,5 @@ export class MyBabylonElem extends ReactiveElement {
         if (changes.has("pick")) {
             queueEvent<PickDetail>(this, "babylon.picked", { state: "picked", mesh: this.pick?.pickedMesh?.id });
         }
-    }
-
-    // TODO: move to controller
-
-    _factory: Nullable<ShapeFactory> = null;
-
-    override ondragenter = (ev: DragEvent) => {
-        ev.preventDefault();
-        if (!this.dragging) return;
-        this._factory = new ShapeFactory(this.scene, this.dragging);
-    }
-
-    override ondragleave = (event: DragEvent) => {
-        event.preventDefault();
-        if (!this.dragging) return;
-        this._factory = null;
-    }
-
-    override ondragover = (ev: DragEvent) => {
-        ev.preventDefault();
-    } 
-
-    override ondrop = (ev: DragEvent) => {
-        ev.preventDefault();
-        if (!this._factory) return;
-        this._factory?.createEntity(Vector3.Zero());
     }
 }

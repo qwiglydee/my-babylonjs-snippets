@@ -6,13 +6,13 @@ import { createContext } from "@lit/context";
 export interface AppCtx {
     status: string;
     foo: string;
-    dragging: Nullable<ShapeParams>;
 }
 
 export const appCtx = createContext<AppCtx>(Symbol('app'));
 
 export interface AppElement {
     ctx: AppCtx;
+    dragging: Nullable<ShapeParams>;
 }
 
 /**** shared  ****/
@@ -59,5 +59,6 @@ export interface BabylonElem extends ReactiveElement {
     ctx: SceneCtx;
     utils: Scene;
     pick: Nullable<PickingInfo>;
+    dragging: Nullable<ShapeParams>;
 }
 
