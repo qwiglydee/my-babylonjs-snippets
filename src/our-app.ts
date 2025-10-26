@@ -65,7 +65,7 @@ export class OurAppElem extends ReactiveElement {
         this.#updateCtx({ status: `Dragging ${this.dragging!.label}...`})
     }
 
-    override ondragend = (event: DragEvent) => {
+    override ondragend = (_event: DragEvent) => {
         this.dragging = null;
         this.#updateCtx({ status: "..." });
     }

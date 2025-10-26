@@ -59,6 +59,6 @@ export interface BabylonElem extends ReactiveElement {
     ctx: SceneCtx;
     utils: Scene;
     pick: Nullable<PickingInfo>;
-    dragging: Nullable<ShapeParams>;
+    dragdata: Nullable<ShapeParams>;
 }
 

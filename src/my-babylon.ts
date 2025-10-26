@@ -3,6 +3,7 @@ import { css, html, ReactiveElement, render, type PropertyValues } from "lit";
 import { customElement, property, query, state } from "lit/decorators.js";
 
 import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
+import { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
 import { AxesViewer } from "@babylonjs/core/Debug/axesViewer";
 import { Engine } from "@babylonjs/core/Engines/engine";
 import type { EngineOptions } from "@babylonjs/core/Engines/thinEngine";
@@ -13,17 +14,17 @@ import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRend
 import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
 
-import { pickCtx, sceneCtx, utilsCtx, draggingCtx, type BabylonElem, type PickDetail, type SceneCtx, type ShapeParams } from "./context";
+import { draggingCtx, pickCtx, sceneCtx, utilsCtx, type BabylonElem, type PickDetail, type SceneCtx, type ShapeParams } from "./context";
 import { BabylonController } from "./controllers/base";
+import { DroppingController } from "./controllers/dropping";
 import { HighlightingController } from "./controllers/highlighting";
 import { MovingController } from "./controllers/moving";
 import { PickingController } from "./controllers/picking";
 import { ShufflingController } from "./controllers/shuffling";
+import { ShapeFactory } from "./factory";
 import { MyScene } from "./scene";
 import { debug } from "./utils/debug";
 import { queueEvent } from "./utils/events";
-import { ShapeFactory } from "./factory";
-import { DroppingController } from "./controllers/dragndrop";
 
 const ENGOPTIONS: EngineOptions = {
     antialias: true,
@@ -49,7 +50,8 @@ export class MyBabylonElem extends ReactiveElement {
     pick: Nullable<PickingInfo> = null;
 
     @consume({ context: draggingCtx, subscribe: true })
-    dragging: Nullable<ShapeParams> = null;
+    @state()
+    dragdata: Nullable<ShapeParams> = null;
 
     @property({ type: Boolean })
     rightHanded = false;
@@ -132,10 +134,10 @@ export class MyBabylonElem extends ReactiveElement {
     shuffling = false;
     _shufflingCtrl: Nullable<ShufflingController> = null;
 
-    _droppingCtrl = new DroppingController(this);
+    _droppingCtrl: Nullable<DroppingController> = null;
 
     /** setting up controllers dynamically from property changes  */
-    _toggleCtrl<T extends BabylonController>(ctrl: Nullable<T>,  enable: boolean, Constructor: new (elem: BabylonElem) => T): Nullable<T> {
+    _toggleCtrl<T extends BabylonController>(ctrl: Nullable<T>, enable: boolean, Constructor: new (elem: BabylonElem) => T): Nullable<T> {
         debug(this, "toggling", { ctrl: Constructor.name, enable });
         if (enable) {
             ctrl = new Constructor(this);
@@ -146,7 +148,7 @@ export class MyBabylonElem extends ReactiveElement {
         }
         return ctrl;
     }
-    
+
     override addController(ctrl: BabylonController) {
         super.addController(ctrl);
         if (this.hasUpdated) ctrl.init();
@@ -203,7 +205,6 @@ export class MyBabylonElem extends ReactiveElement {
         this.#renderHTML();
         this.#init();
         this.addController(this._pickingCtrl);
-        this.addController(this._droppingCtrl);
         this.scene.onModelUpdatedObservable.add(() => this.#invalidateCtx());
         this.#resizingObs.observe(this);
         this.#visibilityObs.observe(this);
@@ -237,10 +238,29 @@ export class MyBabylonElem extends ReactiveElement {
         this.engine.dispose();
     }
 
+    #initDropping() {
+        const factory = new ShapeFactory(this.scene, this.utils, this.dragdata!);
+        factory.snapping = 1.0;
+        this._droppingCtrl = new DroppingController(this, factory);
+        this._droppingCtrl.bounds = new BoundingBox(new Vector3(-5, -1, -5), new Vector3(5, 1, 5))
+        this.addController(this._droppingCtrl);
+    }
+
+    #quitDropping() {
+        if (this._droppingCtrl) this.removeController(this._droppingCtrl);
+        this._droppingCtrl = null;
+    }
+
     override update(changes: PropertyValues) {
         if (changes.has("highlighting")) this._highlightingCtrl = this._toggleCtrl(this._highlightingCtrl, this.highlighting, HighlightingController);
         if (changes.has("moving")) this._movingCtrl = this._toggleCtrl(this._movingCtrl, this.moving, MovingController);
         if (changes.has("shuffling")) this._shufflingCtrl = this._toggleCtrl(this._shufflingCtrl, this.shuffling, ShufflingController);
+
+        if (changes.has("dragdata")) {
+            if (this.dragdata) this.#initDropping();
+            else this.#quitDropping();
+        }
+
         if (changes.has("_ctx_dirty") && this._ctx_dirty) this.#refreshCtx();
         super.update(changes);
     }
