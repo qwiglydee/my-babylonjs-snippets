@@ -10,3 +10,4 @@ import "./my-ground-flat";
 import "./my-something";
 import "./my-camera-arc";
 import "./my-environ";
+import "./my-highlighter";

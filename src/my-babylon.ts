@@ -5,13 +5,11 @@ import { customElement, property, query, state } from "lit/decorators.js";
 import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
 import { Engine } from "@babylonjs/core/Engines/engine";
 import type { EngineOptions } from "@babylonjs/core/Engines/thinEngine";
-import "@babylonjs/core/Layers/effectLayerSceneComponent";
 import { Color4 } from "@babylonjs/core/Maths";
 import type { Nullable } from "@babylonjs/core/types";
 
 import { modelCtx, pickCtx, sceneCtx, type BabylonElem, type ModelCtx, type PickDetail } from "./context";
 import { BabylonController } from "./controllers/base";
-import { HighlightingController } from "./controllers/highlighting";
 import { MovingController } from "./controllers/moving";
 import { PickingController } from "./controllers/picking";
 import { ShufflingController } from "./controllers/shuffling";
@@ -155,8 +153,6 @@ export class MyBabylonElem extends ReactiveElement {
 
     _movingCtrl: Nullable<MovingController> = null;
 
-    _highlightingCtrl: Nullable<HighlightingController> = null;
-
     _shufflingCtrl: Nullable<ShufflingController> = null;
 
     /** setting up controllers dynamically from property changes  */
@@ -219,7 +215,6 @@ export class MyBabylonElem extends ReactiveElement {
     }
 
     override update(changes: PropertyValues) {
-        if (changes.has("highlighting")) this._highlightingCtrl = this._toggleCtrl(this._highlightingCtrl, this.highlighting, HighlightingController);
         if (changes.has("moving")) this._movingCtrl = this._toggleCtrl(this._movingCtrl, this.moving, MovingController);
         if (changes.has("shuffling")) this._shufflingCtrl = this._toggleCtrl(this._shufflingCtrl, this.shuffling, ShufflingController);
 
