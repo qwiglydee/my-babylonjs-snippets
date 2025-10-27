@@ -18,6 +18,7 @@ import { ShapeFactory } from "./factory";
 import { MyScene } from "./scene";
 import { debug } from "./utils/debug";
 import { queueEvent } from "./utils/events";
+import { KillingController } from "./controllers/killing";
 
 const ENGOPTIONS: EngineOptions = {
     antialias: true,
@@ -60,6 +61,9 @@ export class MyBabylonElem extends ReactiveElement {
 
     @property({ type: Boolean })
     shuffling = false;
+
+    @property({ type: Boolean })
+    killing = false;
 
     static override styles = css`
         :host {
@@ -147,6 +151,7 @@ export class MyBabylonElem extends ReactiveElement {
         if (!this._ctx_dirty) return;
         await this.scene.whenReadyAsync(true);
         this.model = {
+            scene: this.scene,
             world: this.scene.getWorldBounds(),
             bounds: this.scene.getModelBounds(),
         };
@@ -161,7 +166,10 @@ export class MyBabylonElem extends ReactiveElement {
 
     _shufflingCtrl: Nullable<ShufflingController> = null;
 
+    _killingCtrl: Nullable<KillingController> = null;
+
     _droppingCtrl: Nullable<DroppingController> = null;
+
 
     /** setting up controllers dynamically from property changes  */
     _toggleCtrl<T extends BabylonController>(ctrl: Nullable<T>, enable: boolean, Constructor: new (elem: BabylonElem) => T): Nullable<T> {
@@ -212,6 +220,7 @@ export class MyBabylonElem extends ReactiveElement {
 
         // initial context should be available to all components
         this.model = {
+            scene: this.scene,
             bounds: null,
             world: null,
         };
@@ -238,6 +247,7 @@ export class MyBabylonElem extends ReactiveElement {
     override update(changes: PropertyValues) {
         if (changes.has("moving")) this._movingCtrl = this._toggleCtrl(this._movingCtrl, this.moving, MovingController);
         if (changes.has("shuffling")) this._shufflingCtrl = this._toggleCtrl(this._shufflingCtrl, this.shuffling, ShufflingController);
+        if (changes.has("killing")) this._killingCtrl = this._toggleCtrl(this._killingCtrl, this.killing, KillingController);
 
         if (changes.has("dragdata")) {
             if (this.dragdata) this.#initDropping();
