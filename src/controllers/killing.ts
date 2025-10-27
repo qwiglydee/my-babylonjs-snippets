@@ -10,7 +10,11 @@ export class KillingController extends BabylonController {
 
     init() {
         this.#obs = this.scene.onKeyboardObservable.add((info: KeyboardInfo) => {
-            if (info.type == KeyboardEventTypes.KEYDOWN && info.event.key == 'x' && this.picked) this.#kill(this.picked);
+            if (info.type == KeyboardEventTypes.KEYDOWN && info.event.key == 'x' && this.picked) {
+                this.#kill(this.picked);
+                this.host.pick = null;
+                this.host.requestUpdate('pick');
+            }
         });
     }
 
