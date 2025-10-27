@@ -141,6 +141,7 @@ export class MyBabylonElem extends ReactiveElement {
         if (!this._ctx_dirty) return;
         await this.scene.whenReadyAsync(true);
         this.model = {
+            scene: this.scene,
             world: this.scene.getWorldBounds(),
             bounds: this.scene.getModelBounds(),
         };
@@ -204,6 +205,7 @@ export class MyBabylonElem extends ReactiveElement {
 
         // initial context should be available to all components
         this.model = {
+            scene: this.scene,
             bounds: null,
             world: null,
         };
