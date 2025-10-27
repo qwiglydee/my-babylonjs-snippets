@@ -8,17 +8,18 @@ import { CubeTexture } from "@babylonjs/core/Materials/Textures/cubeTexture";
 import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import { Tags } from "@babylonjs/core/Misc/tags";
 import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
 
-import { sceneCtx, type SceneCtx } from "./context";
-import { debug } from "./utils/debug";
+import { sceneCtx } from "./context";
 import { assertNonNull } from "./utils/asserts";
+import { debug } from "./utils/debug";
 
 @customElement("my-environ")
 export class MyEnvironElem extends ReactiveElement {
-    @consume({ context: sceneCtx, subscribe: true })
-    ctx!: SceneCtx;
+    @consume({ context: sceneCtx, subscribe: false })
+    scene!: Scene;
 
     @property()
     src: Nullable<string> = null;
@@ -68,7 +69,7 @@ export class MyEnvironElem extends ReactiveElement {
 
     async #initEnv() {
         debug(this, "initializing env", { src: this.src });
-        const scene = this.ctx!.scene;
+        const scene = this.scene;
         this._envTxt = await MyEnvironElem._loadTextureAsync(scene, this.src!);
         this._envTxt.level = this.envIntens;
         scene.environmentTexture = this._envTxt;
@@ -76,7 +77,7 @@ export class MyEnvironElem extends ReactiveElement {
 
     async #initSky() {
         debug(this, "initializing sky", { src: this.src });
-        const scene = this.ctx.scene;
+        const scene = this.scene;
 
         this._skyTxt = this._envTxt!.clone();
         this._skyTxt.coordinatesMode = Texture.SKYBOX_MODE;
@@ -88,12 +89,11 @@ export class MyEnvironElem extends ReactiveElement {
         this._skyMat.reflectionBlur = this.skyBlur;
 
         this._skyBox = CreateBox("(SkyBox)", { size: this.size, sideOrientation: Mesh.BACKSIDE }, scene);
+        Tags.AddTagsTo(this._skyBox, "aux");
         this._skyBox.isPickable = false;
         this._skyBox.material = this._skyMat;
         this._skyBox.infiniteDistance = true;
         this._skyBox.ignoreCameraMaxZ = true;
-
-        scene.markAux(this._skyBox);
     }
 
     override update(changes: PropertyValues) {
