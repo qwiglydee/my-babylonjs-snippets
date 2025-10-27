@@ -38,6 +38,7 @@ export const sceneCtx = createContext<Scene>(Symbol('babylon.scene'));
 export const pickCtx = createContext<Nullable<PickingInfo>>(Symbol('babylon.pick'))
 
 export interface ModelCtx {
+    scene: MyScene; // the root scene
     bounds: Nullable<BoundingBox>;
     world: Nullable<BoundingBox>;
     // parts, actions, etc
