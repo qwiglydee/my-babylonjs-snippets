@@ -65,7 +65,7 @@ export class MyGUIHotspotTagsElem extends ReactiveElement {
     }
 
     #createSpot(node: TransformNode) {
-        const spot = new Spot(`${node.id}-hotspot`);
+        const spot = new Spot(`${node.id}-spot`);
         this.gui.addControl(spot);
         spot.color = this.color;
         spot.diameter = this.size;

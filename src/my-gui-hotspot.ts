@@ -54,7 +54,7 @@ export class MyGUIHotspotElem extends ReactiveElement {
 
     #init() {
         debug(this, "initilizing");
-        const spot = new Spot(this.id);
+        const spot = new Spot(`${this.id}-spot`);
         this.gui.addControl(this._spot);
         spot.color = this.color;
         spot.diameter = this.size;
