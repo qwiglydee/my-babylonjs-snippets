@@ -10,8 +10,6 @@ import { Spot } from "./gui2d/spot";
 import { sceneCtx, type ModelCtx, modelCtx, guiCtx } from "./context";
 import { debug, debugChanges } from "./utils/debug";
 import { PointerEventTypes, PointerInfo } from "@babylonjs/core/Events/pointerEvents";
-import type { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
-import { Tags } from "@babylonjs/core/Misc/tags";
 
 @customElement("my-gui-hotspotags")
 export class MyGUIHotspotTagsElem extends ReactiveElement {
