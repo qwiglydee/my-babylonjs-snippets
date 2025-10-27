@@ -63,8 +63,8 @@
                     <my-axes></my-axes>
 
                     <my-gui foreground>
-                        <my-gui-hotspot anchor="box.001" size="24"></my-gui-hotspot>
-                        <my-gui-hotspot anchor="ball.005" size="24"></my-gui-hotspot>
+                        <my-gui-hotspot anchor="box.001" blinking></my-gui-hotspot>
+                        <my-gui-hotspot anchor="ball.005"></my-gui-hotspot>
                     </my-gui>
                 </my-layer>
 
@@ -100,6 +100,7 @@
                 stuff: document.querySelector("my-stuff"),
                 camera: document.querySelector("my-camera-arc"),
                 gui: document.querySelector("my-gui"),
+                spots: document.querySelectorAll("my-gui-hotspot"),
             };
 
             function toggleFullscreen() {

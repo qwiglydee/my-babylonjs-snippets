@@ -10,6 +10,7 @@ import type { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import { Spot } from "./gui2d/spot";
 import { sceneCtx, type ModelCtx, modelCtx, guiCtx } from "./context";
 import { debug, debugChanges } from "./utils/debug";
+import { PointerEventTypes, PointerInfo } from "@babylonjs/core/Events/pointerEvents";
 
 @customElement("my-gui-hotspot")
 export class MyGUIHotspotElem extends ReactiveElement {
@@ -26,7 +27,6 @@ export class MyGUIHotspotElem extends ReactiveElement {
     @property()
     anchor: Nullable<string> = null;
 
-    @state()
     _anchor: Nullable<TransformNode> = null;
 
     // set to disabled when anchor node not available
@@ -34,13 +34,13 @@ export class MyGUIHotspotElem extends ReactiveElement {
     disabled = false;
 
     @property()
-    color: string = "#f0f020";
+    color: string = "#f0f080";
 
     @property({ type: Number })
     alpha = 0.5;
 
     @property({ type: Number })
-    size: number = 8;
+    size: number = 24;
 
     @property({ type: Boolean })
     blinking = false;
@@ -59,8 +59,7 @@ export class MyGUIHotspotElem extends ReactiveElement {
         spot.color = this.color;
         spot.diameter = this.size;
         spot.isVisible = false;
-        spot.blinking = this.blinking;
-        
+
         this._spot = spot;
         this.gui.addControl(this._spot);
     }
@@ -70,18 +69,36 @@ export class MyGUIHotspotElem extends ReactiveElement {
         this._spot.isVisible = (this._anchor !== null);
     }
 
+    #onpointer: any;
+
+    #initBlinking() {
+        this._spot.blinking = this.blinking;
+        if (this.blinking) {
+            this.#onpointer = this.model.scene.onPointerObservable.add((info: PointerInfo) => {
+                if (info.type == PointerEventTypes.POINTERDOWN) {
+                    if (!info.pickInfo?.pickedMesh) this.blink();
+                }
+            });
+        } else if (this.#onpointer) {
+            this.#onpointer.remove();
+            this.#onpointer = null;
+        }
+    }
+
     override update(changes: PropertyValues) {
         debugChanges(this, "updating", changes);
-        if (changes.has('model') || changes.has('anchor'))  {
+        if (changes.has("model") || changes.has("anchor")) {
             this._anchor = this.anchor ? (this.model.scene.getNodeByName(this.anchor) as TransformNode) : null;
-            this.disabled = (this._anchor == null);
+            this.disabled = this._anchor == null;
         }
-        if (changes.has('_anchor')) this.#attach();
-        if (changes.has('color')) this._spot.color = this.color;
-        if (changes.has('size')) this._spot.diameter = this.size;
-        
+        if (changes.has("disabled") && !this.disabled) this.#attach();
+        if (changes.has("color")) this._spot.color = this.color;
+        if (changes.has("size")) this._spot.diameter = this.size;
+        if (changes.has("disabled") || changes.has("blinking")) this.#initBlinking();
         super.update(changes);
     }
 
-
+    blink() {
+        this._spot.blink(this.scene);
+    }
 }

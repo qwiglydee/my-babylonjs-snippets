@@ -9,7 +9,7 @@ import { RadialGradient } from "@babylonjs/gui/2D/controls/gradient/RadialGradie
 import type { Measure } from "@babylonjs/gui/2D/measure";
 
 
-export function createBlinking() {
+function createBlinking() {
     const a = new Animation("blinking", "alpha", 24, Animation.ANIMATIONTYPE_FLOAT, Animation.ANIMATIONLOOPMODE_CONSTANT); 
     a.setKeys([
         { frame: 0, value: 0 },
@@ -34,6 +34,7 @@ export class Spot extends Control {
     set blinking(enable: boolean) {
         this._blinking = enable;
         if (enable) this.animations = [Spot._blinking]; else this.animations = [];
+        this.alpha = enable ? 0 : 1.0;
     } 
 
     _diameter: number = 8;
@@ -90,6 +91,6 @@ export class Spot extends Control {
     }
 
     blink(scene: Scene) {
-        scene.beginAnimation(this, 0, 12, false);
+        scene.beginAnimation(this, 0, 24, false);
     }
 }
