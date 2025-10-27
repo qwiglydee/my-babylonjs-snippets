@@ -8,16 +8,14 @@ import type { ShapeParams } from "./context";
 
 export class ShapeFactory {
     scene: Scene;
-    utils: Scene;
     snapping: number = 0;
 
     label: string;
     shape: string;
     size: number;
 
-    constructor(scene: Scene, utils: Scene, params: ShapeParams) {
+    constructor(scene: Scene, params: ShapeParams) {
         this.scene = scene; 
-        this.utils = utils;
         this.label = params.label ?? "stuff";
         this.shape = params.shape;
         this.size = params.size ?? 1.0;
@@ -67,7 +65,7 @@ export class ShapeFactory {
     }
 
     createGhost(position: Vector3): Mesh {
-        const mesh = this.createMesh(this.utils, `${this.label}.000`);
+        const mesh = this.createMesh(this.scene, `${this.label}.000`);
         mesh.material = this.ghostMat;
         mesh.position = position;
         return mesh;

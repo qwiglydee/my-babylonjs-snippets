@@ -223,10 +223,10 @@ export class MyBabylonElem extends ReactiveElement {
     }
 
     #initDropping() {
-        const factory = new ShapeFactory(this.scene, this.utils, this.dragdata!);
+        const factory = new ShapeFactory(this.scene, this.dragdata!);
         factory.snapping = 1.0;
         this._droppingCtrl = new DroppingController(this, factory);
-        this._droppingCtrl.bounds = new BoundingBox(new Vector3(-5, -1, -5), new Vector3(5, 1, 5))
+        this._droppingCtrl.bounds = this.model.world;
         this.addController(this._droppingCtrl);
     }
 
