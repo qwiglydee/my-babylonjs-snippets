@@ -3,17 +3,16 @@ import { css, html, ReactiveElement, render, type PropertyValues } from "lit";
 import { customElement, property, query, state } from "lit/decorators.js";
 
 import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
-import { AxesViewer } from "@babylonjs/core/Debug/axesViewer";
 import { Engine } from "@babylonjs/core/Engines/engine";
 import type { EngineOptions } from "@babylonjs/core/Engines/thinEngine";
 import "@babylonjs/core/Layers/effectLayerSceneComponent";
 import { Color4 } from "@babylonjs/core/Maths";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
-import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
-import type { Scene } from "@babylonjs/core/scene";
+// import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
+// import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
 
-import { pickCtx, sceneCtx, utilsCtx, type BabylonElem, type PickDetail, type SceneCtx } from "./context";
+import { pickCtx, sceneCtx, type ModelCtx, modelCtx, type BabylonElem, type PickDetail } from "./context";
 import { BabylonController } from "./controllers/base";
 import { HighlightingController } from "./controllers/highlighting";
 import { MovingController } from "./controllers/moving";
@@ -34,13 +33,16 @@ const ENGOPTIONS: EngineOptions = {
  */
 @customElement("my-babylon")
 export class MyBabylonElem extends ReactiveElement {
-    /** available immediately, updating when scene content changes */
-    @provide({ context: sceneCtx })
-    ctx!: SceneCtx;
+    @query("canvas")
+    canvas!: HTMLCanvasElement;
 
-    /** utility layer scene */
-    @provide({ context: utilsCtx })
-    utils!: Scene;
+    engine!: Engine;
+
+    @provide({ context: sceneCtx })
+    scene!: MyScene;
+
+    @provide({ context: modelCtx })
+    model!: ModelCtx;
 
     @provide({ context: pickCtx })
     @state() // updated by behaviors
@@ -84,12 +86,6 @@ export class MyBabylonElem extends ReactiveElement {
             this.renderRoot
         );
     }
-
-    @query("canvas")
-    canvas!: HTMLCanvasElement;
-
-    engine!: Engine;
-    scene!: MyScene;
 
     @state()
     selected: Nullable<Mesh> = null;
@@ -181,13 +177,12 @@ export class MyBabylonElem extends ReactiveElement {
     async #refreshCtx() {
         if (!this._ctx_dirty) return;
         await this.scene.whenReadyAsync(true);
-        this.ctx = {
-            scene: this.scene,
+        this.model = {
             world: this.scene.getWorldBounds(),
             bounds: this.scene.getModelBounds(),
         };
         this._ctx_dirty = false;
-        debug(this, `CTX ===`, this.ctx);
+        debug(this, `CTX ===`, this.model);
         queueEvent(this, "babylon.updated", {});
     }
 
@@ -199,13 +194,7 @@ export class MyBabylonElem extends ReactiveElement {
         this.scene.onModelUpdatedObservable.add(() => this.#invalidateCtx());
         this.#resizingObs.observe(this);
         this.#visibilityObs.observe(this);
-        // NB: initial scene is not ready yet but it's empty anyway
-        this.ctx = {
-            scene: this.scene,
-            world: null,
-            bounds: null,
-        };
-    }
+            }
 
     override disconnectedCallback(): void {
         this.#resizingObs.disconnect();
@@ -220,8 +209,12 @@ export class MyBabylonElem extends ReactiveElement {
         this.scene = new MyScene(this.engine);
         this.scene.useRightHandedSystem = this.rightHanded;
         this.scene.clearColor = Color4.FromHexString(getComputedStyle(this).getPropertyValue("--my-background-color"));
-        this.utils = new UtilityLayerRenderer(this.scene, false, false).utilityLayerScene;
-        new AxesViewer(this.utils);
+        
+        // initial context should be available to all components
+        this.model = {
+            bounds: null,
+            world: null,
+        }
     }
 
     #dispose() {

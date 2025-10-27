@@ -56,11 +56,15 @@
             <my-babylon picking highlighting moving shuffling>
                 <my-camera-arc autoSpin autoZoom autoFocus focusFactor="0.5"></my-camera-arc>
                 <my-environ src="assets/studio.env" sky skyIntens="0.25" skyBlur="0.25"></my-environ>
-                <my-ground-grid src="assets/ground.png"autoSize></my-ground>
+                <my-ground-flat src="assets/ground.png" autoSize></my-ground>
                 <my-stuff radius="4" count="3" shuffling></my-stuff>
 
+                <my-layer id="utility">
+                    <my-ground-grid src="assets/ground.png" autoSize></my-ground>
+                    <my-axes></my-axes>
+                </my-layer>
+
                 <div slot="overlay" style="position: absolute; top: 4px; left: 4px">
-                    <!-- https://fonts.google.com/icons -->
                     <svg xmlns="http://www.w3.org/2000/svg" class="bi" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
                         <path
                             d="M520-360h120q33 0 56.5-23.5T720-440v-80q0-33-23.5-56.5T640-600H520v240Zm60-60v-120h60q8 0 14 6t6 14v80q0 8-6 14t-14 6h-60Zm-320 60h140q17 0 28.5-11.5T440-400v-40q0-17-11.5-28.5T400-480q17 0 28.5-11.5T440-520v-40q0-17-11.5-28.5T400-600H260v60h120v30h-80v60h80v30H260v60ZM160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h640v-480H160v480Zm0 0v-480 480Z"
@@ -68,7 +72,6 @@
                     </svg>
                 </div>
                 <div slot="overlay" style="position: absolute; top: 4px; right: 4px">
-                    <!-- https://fonts.google.com/icons -->
                     <svg xmlns="http://www.w3.org/2000/svg" class="bi bi-btn" height="24px" viewBox="0 -960 960 960" width="24px" onclick="toggleFullscreen()">
                         <path
                             d="M120-120v-200h80v120h120v80H120Zm520 0v-80h120v-120h80v200H640ZM120-640v-200h200v80H200v120h-80Zm640 0v-120H640v-80h200v200h-80Z"

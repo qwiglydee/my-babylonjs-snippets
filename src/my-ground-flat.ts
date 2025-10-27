@@ -6,20 +6,24 @@ import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import { Color3, Vector2 } from "@babylonjs/core/Maths";
 import { CreateGround } from "@babylonjs/core/Meshes/Builders/groundBuilder";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import { Tags } from "@babylonjs/core/Misc/tags";
 import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
 
-import { sceneCtx, utilsCtx, type SceneCtx } from "./context";
-import { assertNonNull } from "./utils/asserts";
 import { BackgroundMaterial } from "@babylonjs/core/Materials/Background/backgroundMaterial";
+import { sceneCtx, type ModelCtx, modelCtx } from "./context";
+import { assertNonNull } from "./utils/asserts";
 // import { debug } from "./utils/debug";
 
 
 @customElement("my-ground-flat")
 export class MyFlatGroundElem extends ReactiveElement {
-    @consume({ context: sceneCtx, subscribe: true })
+    @consume({ context: sceneCtx, subscribe: false })
+    scene!: Scene;
+
+    @consume({ context: modelCtx, subscribe: true })
     @state()
-    ctx!: SceneCtx;
+    model!: ModelCtx;
 
     @property()
     src: Nullable<string> = null;
@@ -54,8 +58,7 @@ export class MyFlatGroundElem extends ReactiveElement {
 
     #init() {
         // debug(this, "initilizing");
-        assertNonNull(this.ctx);
-        const scene = this.ctx.scene;
+        const scene = this.scene;
 
         this._material = new BackgroundMaterial("(Ground)", scene);
         this._material.useRGBColor = false;
@@ -64,7 +67,7 @@ export class MyFlatGroundElem extends ReactiveElement {
         this._material.diffuseTexture.hasAlpha = true;
 
         this._ground = CreateGround("(Ground)", { width: 1.0, height: 1.0, subdivisions: 1 }, scene);
-        scene.markAux(this._ground);
+        Tags.AddTagsTo(this._ground, "aux");
         this._ground.isPickable = false;
         this._ground.material = this._material;
 
@@ -72,7 +75,7 @@ export class MyFlatGroundElem extends ReactiveElement {
     }
 
     #calcSize() {
-        return this.ctx.world ? 2 * (new Vector2(this.ctx.world.extendSize.x, this.ctx.world.extendSize.z)).length() : this.defaultSize;
+        return this.model.world ? 2 * (new Vector2(this.model.world.extendSize.x, this.model.world.extendSize.z)).length() : this.defaultSize;
     }
 
     #resize() {
@@ -82,7 +85,7 @@ export class MyFlatGroundElem extends ReactiveElement {
     }
 
     override update(changes: PropertyValues) {
-        if (this.autoSize && (changes.has("ctx") || changes.has("autoSize"))) this._size = this.#calcSize();
+        if (this.autoSize && (changes.has("model") || changes.has("autoSize"))) this._size = this.#calcSize();
         if (!this.autoSize && changes.has('defaultSize')) this._size = this.defaultSize;
         if (changes.has("_size")) this.#resize();
         if (changes.has("opacity")) this._material.alpha = this.opacity;
