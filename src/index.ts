@@ -15,3 +15,4 @@ import "./my-highlighter";
 import "./my-gui";
 import "./my-gui-something";
 import "./my-gui-hotspot";
+import "./my-gui-hotspotags";

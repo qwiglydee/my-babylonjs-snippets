@@ -56,7 +56,7 @@
             <my-babylon picking moving shuffling>
                 <my-camera-arc autoSpin autoZoom autoFocus focusFactor="0.5"></my-camera-arc>
                 <my-environ src="assets/studio.env" sky skyIntens="0.25" skyBlur="0.25"></my-environ>
-                <my-stuff radius="4" count="3" shuffling></my-stuff>
+                <my-stuff radius="4" count="11" shuffling></my-stuff>
 
                 <my-layer id="utility" events>
                     <my-ground-grid src="assets/ground.png" autoSize></my-ground>
@@ -64,7 +64,7 @@
 
                     <my-gui foreground>
                         <my-gui-hotspot anchor="box.001" blinking></my-gui-hotspot>
-                        <my-gui-hotspot anchor="ball.005"></my-gui-hotspot>
+                        <my-gui-hotspotags tag="hotspot" blinking></my-gui-hotspot>
                     </my-gui>
                 </my-layer>
 
@@ -101,6 +101,7 @@
                 camera: document.querySelector("my-camera-arc"),
                 gui: document.querySelector("my-gui"),
                 spots: document.querySelectorAll("my-gui-hotspot"),
+                spottags: document.querySelector("my-gui-hotspotags"),
             };
 
             function toggleFullscreen() {

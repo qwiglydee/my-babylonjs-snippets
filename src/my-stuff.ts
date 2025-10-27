@@ -10,6 +10,7 @@ import type { Scene } from "@babylonjs/core/scene";
 
 import { sceneCtx } from "./context";
 import { debug } from "./utils/debug";
+import { Tags } from "@babylonjs/core/Misc/tags";
 
 @customElement("my-stuff")
 export class MyStuffElem extends ReactiveElement {
@@ -62,6 +63,8 @@ export class MyStuffElem extends ReactiveElement {
             default:
                 throw Error();
         }
+        if (Math.random() > 0.5) Tags.AddTagsTo(mesh, "hotspot");
+
         mesh.position = this.#randomLoc();
         mesh.material = this._defaultMat;
         return mesh;
