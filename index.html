@@ -63,6 +63,10 @@
                     <my-axes></my-axes>
                 </my-layer>
 
+                <my-gui foreground>
+                    <my-gui-something>FOO</my-gui-something>
+                </my-gui>
+
                 <my-highlighter color="#0000ff"></my-highlighter>
 
                 <div slot="overlay" style="position: absolute; top: 4px; left: 4px">
@@ -94,6 +98,7 @@
                 ground: document.querySelector("my-ground"),
                 stuff: document.querySelector("my-stuff"),
                 camera: document.querySelector("my-camera-arc"),
+                gui: document.querySelector("my-gui"),
             };
 
             function toggleFullscreen() {

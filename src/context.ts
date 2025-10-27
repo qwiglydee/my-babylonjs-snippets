@@ -1,5 +1,5 @@
-import type { ReactiveElement } from "lit";
 import { createContext } from "@lit/context";
+import type { ReactiveElement } from "lit";
 
 /**** main app ****/
 
@@ -29,6 +29,7 @@ import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
 import type { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
 import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
+import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
 
 import type { MyScene } from "./scene";
 
@@ -44,6 +45,8 @@ export interface ModelCtx {
 }
 
 export const modelCtx = createContext<ModelCtx>(Symbol('babylon.model'));
+
+export const guiCtx = createContext<AdvancedDynamicTexture>(Symbol('babylon.gui'));
 
 export interface BabylonElem extends ReactiveElement {
     scene: MyScene;

@@ -11,3 +11,6 @@ import "./my-something";
 import "./my-camera-arc";
 import "./my-environ";
 import "./my-highlighter";
+
+import "./my-gui";
+import "./my-gui-something";
