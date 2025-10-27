@@ -2,6 +2,7 @@ import "./our-app";
 import "./our-status";
 
 import "./my-babylon";
+import "./my-layer";
 import "./my-stuff";
 import "./my-axes";
 import "./my-ground-grid";
