@@ -17,7 +17,7 @@ export abstract class BabylonController implements ReactiveController {
     }
 
     get scene() {
-        return this.host!.ctx.scene;
+        return this.host!.scene;
     }
 
     get picked(): Nullable<Mesh> {

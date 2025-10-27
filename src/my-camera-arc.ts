@@ -5,16 +5,20 @@ import { customElement, property, state } from "lit/decorators.js";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { Vector3 } from "@babylonjs/core/Maths";
 import { Tools } from "@babylonjs/core/Misc/tools";
+import type { Scene } from "@babylonjs/core/scene";
 
-import { sceneCtx, type SceneCtx } from "./context";
+import { sceneCtx, type ModelCtx, modelCtx } from "./context";
 import { assertNonNull } from "./utils/asserts";
 import { debug } from "./utils/debug";
 
 @customElement("my-camera-arc")
 export class MyArcCameraElem extends ReactiveElement {
-    @consume({ context: sceneCtx, subscribe: true })
+    @consume({ context: sceneCtx, subscribe: false })
+    scene!: Scene;
+
+    @consume({ context: modelCtx, subscribe: true })
     @state()
-    ctx!: SceneCtx;
+    model!: ModelCtx;
 
     @property({ type: Boolean })
     autoZoom = false;
@@ -51,7 +55,7 @@ export class MyArcCameraElem extends ReactiveElement {
 
     #init() {
         debug(this, "initializing");
-        const scene = this.ctx!.scene;
+        const scene = this.scene;
         const radius = this.defaultRadius;
         this._camera = new ArcRotateCamera("(Camera)", Tools.ToRadians(this.defaultAlpha), Tools.ToRadians(this.defaultBeta), radius, Vector3.Zero(), scene);
         this._camera.setEnabled(false);
@@ -65,7 +69,7 @@ export class MyArcCameraElem extends ReactiveElement {
     }
 
     override update(changes: PropertyValues) {
-        if ((changes.has("ctx") || changes.has("autoZoom")) && this.autoZoom) this.reframe();
+        if (this.autoZoom && (changes.has("model") || changes.has("autoZoom"))) this.reframe();
         if (changes.has("autoSpin")) this._camera.useAutoRotationBehavior = this.autoSpin;
         super.update(changes);
     }
@@ -73,14 +77,13 @@ export class MyArcCameraElem extends ReactiveElement {
     _camera!: ArcRotateCamera;
 
     reframe() {
-        debug(this, "reframing", this.ctx?.bounds);
-        assertNonNull(this.ctx);
+        debug(this, "reframing", this.model.bounds);
         this._camera.autoRotationBehavior?.resetLastInteractionTime();
 
-        if (this.ctx.world) {
-            const distance = this._camera._calculateLowerRadiusFromModelBoundingSphere(this.ctx.world.minimum, this.ctx.world.maximum, this.zoomFactor);
+        if (this.model.world) {
+            const distance = this._camera._calculateLowerRadiusFromModelBoundingSphere(this.model.world.minimum, this.model.world.maximum, this.zoomFactor);
             this._camera.radius = distance;
-            this._camera.focusOn({ min: this.ctx.world.minimum, max: this.ctx.world.maximum, distance }, true);
+            this._camera.focusOn({ min: this.model.world.minimum, max: this.model.world.maximum, distance }, true);
         } else {
             this._camera.radius = this.defaultRadius;
             this._camera.alpha = Tools.ToRadians(this.defaultAlpha);

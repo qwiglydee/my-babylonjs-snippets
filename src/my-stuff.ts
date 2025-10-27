@@ -2,24 +2,19 @@ import { consume } from "@lit/context";
 import { ReactiveElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
-import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
 import { PBRMetallicRoughnessMaterial } from "@babylonjs/core/Materials/PBR/pbrMetallicRoughnessMaterial";
 import { Vector3 } from "@babylonjs/core/Maths";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
-import type { Nullable } from "@babylonjs/core/types";
+import type { Scene } from "@babylonjs/core/scene";
 
-import { sceneCtx, pickCtx, type SceneCtx } from "./context";
-import { assertNonNull } from "./utils/asserts";
+import { sceneCtx } from "./context";
 import { debug } from "./utils/debug";
 
 @customElement("my-stuff")
 export class MyStuffElem extends ReactiveElement {
-    @consume({ context: sceneCtx, subscribe: true })
-    ctx!: SceneCtx;
-
-    @consume({ context: pickCtx, subscribe: true })
-    pick: Nullable<PickingInfo> = null;
+    @consume({ context: sceneCtx, subscribe: false })
+    scene!: Scene;
 
     @property({ type: Number })
     radius = 10;
@@ -47,7 +42,7 @@ export class MyStuffElem extends ReactiveElement {
 
     _createItem = (type: number) => {
         debug(this, "creating", { type });
-        const scene = this.ctx!.scene;
+        const scene = this.scene;
 
         let idx = (1 + (scene.meshes.length ?? 0)).toString().padStart(3, "0");
         let mesh: Mesh;
@@ -74,7 +69,7 @@ export class MyStuffElem extends ReactiveElement {
 
     async #init() {
         debug(this, "initializing");
-        this._defaultMat = new PBRMetallicRoughnessMaterial("default", this.ctx!.scene);
+        this._defaultMat = new PBRMetallicRoughnessMaterial("default", this.scene);
         this._defaultMat.metallic = 0;
         this._defaultMat.roughness = 0.5;    
     }
@@ -85,7 +80,6 @@ export class MyStuffElem extends ReactiveElement {
     }
 
     createItem() {
-        assertNonNull(this.ctx?.scene);
         this._createItem(Math.floor(Math.random() * 3));
     }
 }
