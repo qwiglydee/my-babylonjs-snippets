@@ -79,7 +79,7 @@ export class MyStuffElem extends ReactiveElement {
         for (let i = 0; i < this.count; i++) this._createItem(i % 4);
     }
 
-    createItem() {
-        this._createItem(Math.floor(Math.random() * 3));
+    createItem(type?: number) {
+        this._createItem(Math.floor(type ?? Math.random() * 3));
     }
 }
