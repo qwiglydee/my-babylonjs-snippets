@@ -6,17 +6,21 @@ import { ArcRotateCamera, ComputeAlpha, ComputeBeta } from "@babylonjs/core/Came
 import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
 import { Lerp, Vector3 } from "@babylonjs/core/Maths";
 import { Tools } from "@babylonjs/core/Misc/tools";
+import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
 
-import { sceneCtx, pickCtx, type SceneCtx } from "./context";
+import { sceneCtx, pickCtx, type ModelCtx, modelCtx } from "./context";
 import { assertNonNull } from "./utils/asserts";
 import { debug } from "./utils/debug";
 
 @customElement("my-camera-arc")
 export class MyArcCameraElem extends ReactiveElement {
-    @consume({ context: sceneCtx, subscribe: true })
+    @consume({ context: sceneCtx, subscribe: false })
+    scene!: Scene;
+
+    @consume({ context: modelCtx, subscribe: true })
     @state()
-    ctx!: SceneCtx;
+    model!: ModelCtx;
 
     @consume({ context: pickCtx, subscribe: true })
     @state()
@@ -69,14 +73,14 @@ export class MyArcCameraElem extends ReactiveElement {
             }
         });
         this._camera.setEnabled(true);
-        this.ctx!.scene.activeCamera = this._camera;
+        this.scene.activeCamera = this._camera;
     }
 
     _camera!: ArcRotateCamera;
 
     #init() {
         debug(this, "initializing");
-        const scene = this.ctx.scene;
+        const scene = this.scene;
         const radius = this.defaultRadius;
         this._camera = new ArcRotateCamera("(Camera)", Tools.ToRadians(this.defaultAlpha), Tools.ToRadians(this.defaultBeta), radius, Vector3.Zero(), scene);
         this._camera.setEnabled(false);
@@ -102,9 +106,9 @@ export class MyArcCameraElem extends ReactiveElement {
     /** move to initial position and best zoom */
     reset() {
         let target: Vector3, radius: number;
-        if (this.ctx.bounds) {
-            target = this.ctx.bounds.center;
-            radius = this._camera._calculateLowerRadiusFromModelBoundingSphere(this.ctx.bounds.minimum, this.ctx.bounds.maximum);
+        if (this.model.bounds) {
+            target = this.model.bounds.center;
+            radius = this._camera._calculateLowerRadiusFromModelBoundingSphere(this.model.bounds.minimum, this.model.bounds.maximum);
         } else {
             target = Vector3.Zero();
             radius = this.defaultRadius
@@ -118,8 +122,8 @@ export class MyArcCameraElem extends ReactiveElement {
     /** zoom to fit all scene (keep angle) */
     reframe() {
         let radius: number;
-        if (this.ctx.world) {
-            radius = this._camera._calculateLowerRadiusFromModelBoundingSphere(this.ctx.world.minimum, this.ctx.world.maximum, this.zoomFactor);
+        if (this.model.world) {
+            radius = this._camera._calculateLowerRadiusFromModelBoundingSphere(this.model.world.minimum, this.model.world.maximum, this.zoomFactor);
         } else {
             radius = this.defaultRadius
         }
@@ -143,7 +147,7 @@ export class MyArcCameraElem extends ReactiveElement {
     }
 
     override update(changes: PropertyValues) {
-        if ((changes.has("ctx") || changes.has("autoZoom")) && this.autoZoom) this.reframe();
+        if (this.autoZoom && (changes.has("model") || changes.has("autoZoom"))) this.reframe();
         if ((changes.has("pick")|| changes.has("autoFocus")) && this.autoFocus) {
             if (this.pick) this.refocus();
             else this.reset();

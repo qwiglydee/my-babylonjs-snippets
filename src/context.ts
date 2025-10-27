@@ -33,21 +33,21 @@ import type { Nullable } from "@babylonjs/core/types";
 import type { MyScene } from "./scene";
 
 
-export interface SceneCtx {
-    scene: MyScene;
-    bounds: Nullable<BoundingBox>;
-    world: Nullable<BoundingBox>;
-}
-
-export const sceneCtx = createContext<SceneCtx>(Symbol('babylon.scene'));
-
-export const utilsCtx = createContext<Scene>(Symbol('babylon.utils'));
+export const sceneCtx = createContext<Scene>(Symbol('babylon.scene'));
 
 export const pickCtx = createContext<Nullable<PickingInfo>>(Symbol('babylon.pick'))
 
+export interface ModelCtx {
+    bounds: Nullable<BoundingBox>;
+    world: Nullable<BoundingBox>;
+    // parts, actions, etc
+}
+
+export const modelCtx = createContext<ModelCtx>(Symbol('babylon.model'));
+
 export interface BabylonElem extends ReactiveElement {
-    ctx: SceneCtx;
-    utils: Scene;
+    scene: MyScene;
+    model: ModelCtx
     pick: Nullable<PickingInfo>;
 }
 

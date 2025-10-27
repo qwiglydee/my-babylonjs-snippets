@@ -6,23 +6,26 @@ import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import { Color3, Vector2 } from "@babylonjs/core/Maths";
 import { CreateGround } from "@babylonjs/core/Meshes/Builders/groundBuilder";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import { Tags } from "@babylonjs/core/Misc/tags";
 import type { Scene } from "@babylonjs/core/scene";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
 
-import { sceneCtx, utilsCtx, type SceneCtx } from "./context";
+import { modelCtx, sceneCtx, type ModelCtx } from "./context";
+
+import type { Nullable } from "@babylonjs/core/types";
 import { assertNonNull } from "./utils/asserts";
 import { debug } from "./utils/debug";
-import type { Nullable } from "@babylonjs/core/types";
 
 
 @customElement("my-ground-grid")
 export class MyGridGroundElem extends ReactiveElement {
-    @consume({ context: sceneCtx, subscribe: true })
+    @consume({ context: sceneCtx, subscribe: false })
     @state()
-    ctx!: SceneCtx;
+    scene!: Scene;
 
-    @consume({ context: utilsCtx, subscribe: false })
-    utils!: Scene;
+    @consume({ context: modelCtx, subscribe: true })
+    @state()
+    model!: ModelCtx;
 
     @property()
     src: Nullable<string> = null;
@@ -60,8 +63,7 @@ export class MyGridGroundElem extends ReactiveElement {
 
     #init() {
         debug(this, "initilizing");
-        assertNonNull(this.ctx);
-        const scene = this.real ? this.ctx.scene : this.utils;
+        const scene = this.scene;
 
         this._material = new GridMaterial("(Ground)", scene);
         this._material.majorUnitFrequency = 8;
@@ -69,7 +71,8 @@ export class MyGridGroundElem extends ReactiveElement {
         this._material.opacityTexture = new Texture(this.src, scene);
 
         this._ground = CreateGround("(Ground)", { width: 1.0, height: 1.0, subdivisions: 1 }, scene);
-        if (this.real) this.ctx.scene.markAux(this._ground);
+        Tags.AddTagsTo(this._ground, "aux");
+
         this._ground.isPickable = false;
         this._ground.material = this._material;
 
@@ -77,7 +80,7 @@ export class MyGridGroundElem extends ReactiveElement {
     }
 
     #calcSize() {
-        return this.ctx.world ? 2 * (new Vector2(this.ctx.world.extendSize.x, this.ctx.world.extendSize.z)).length() : this.defaultSize;
+        return this.model.world ? 2 * (new Vector2(this.model.world.extendSize.x, this.model.world.extendSize.z)).length() : this.defaultSize;
     }
 
     #resize() {
@@ -88,18 +91,12 @@ export class MyGridGroundElem extends ReactiveElement {
     }
 
     override update(changes: PropertyValues) {
-        if (this.autoSize && (changes.has("ctx") || changes.has("autoSize"))) this._size = this.#calcSize();
+        if (this.autoSize && (changes.has("model") || changes.has("autoSize"))) this._size = this.#calcSize();
         if (!this.autoSize && changes.has('defaultSize')) this._size = this.defaultSize;
-        
         if (changes.has("_size")) this.#resize();
-
         if (changes.has("opacity")) this._material.opacity = this.opacity;
-
         if (changes.has("opacity2")) this._material.minorUnitVisibility = this.opacity2;
-
-        if (changes.has("color")) {
-            this._material.lineColor = Color3.FromHexString(this.color);
-        }
+        if (changes.has("color")) this._material.lineColor = Color3.FromHexString(this.color);
         super.update(changes);
     }
 }
