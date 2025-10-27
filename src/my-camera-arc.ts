@@ -69,7 +69,7 @@ export class MyArcCameraElem extends ReactiveElement {
     }
 
     override update(changes: PropertyValues) {
-        if ((changes.has("ctx") || changes.has("autoZoom")) && this.autoZoom) this.reframe();
+        if (this.autoZoom && (changes.has("model") || changes.has("autoZoom"))) this.reframe();
         if (changes.has("autoSpin")) this._camera.useAutoRotationBehavior = this.autoSpin;
         super.update(changes);
     }

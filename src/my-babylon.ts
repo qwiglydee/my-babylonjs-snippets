@@ -7,12 +7,9 @@ import { Engine } from "@babylonjs/core/Engines/engine";
 import type { EngineOptions } from "@babylonjs/core/Engines/thinEngine";
 import "@babylonjs/core/Layers/effectLayerSceneComponent";
 import { Color4 } from "@babylonjs/core/Maths";
-import { Mesh } from "@babylonjs/core/Meshes/mesh";
-// import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
-// import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
 
-import { pickCtx, sceneCtx, type ModelCtx, modelCtx, type BabylonElem, type PickDetail } from "./context";
+import { modelCtx, pickCtx, sceneCtx, type BabylonElem, type ModelCtx, type PickDetail } from "./context";
 import { BabylonController } from "./controllers/base";
 import { HighlightingController } from "./controllers/highlighting";
 import { MovingController } from "./controllers/moving";
@@ -51,6 +48,15 @@ export class MyBabylonElem extends ReactiveElement {
     @property({ type: Boolean })
     rightHanded = false;
 
+    @property({ type: Boolean })
+    moving = false;
+
+    @property({ type: Boolean })
+    highlighting = false;
+
+    @property({ type: Boolean })
+    shuffling = false;
+
     static override styles = css`
         :host {
             display: block;
@@ -87,9 +93,6 @@ export class MyBabylonElem extends ReactiveElement {
         );
     }
 
-    @state()
-    selected: Nullable<Mesh> = null;
-
     #needresize = true;
     #resizingObs!: ResizeObserver;
     #visibilityObs!: IntersectionObserver;
@@ -106,44 +109,6 @@ export class MyBabylonElem extends ReactiveElement {
             },
             { threshold: 0.5 }
         );
-    }
-
-    // permanent controller
-    _pickingCtrl = new PickingController(this);
-
-    @property({ type: Boolean })
-    moving = false;
-    _movingCtrl: Nullable<MovingController> = null;
-
-    @property({ type: Boolean })
-    highlighting = false;
-    _highlightingCtrl: Nullable<HighlightingController> = null;
-
-    @property({ type: Boolean })
-    shuffling = false;
-    _shufflingCtrl: Nullable<ShufflingController> = null;
-
-    /** setting up controllers dynamically from property changes  */
-    _toggleCtrl<T extends BabylonController>(ctrl: Nullable<T>,  enable: boolean, Constructor: new (elem: BabylonElem) => T): Nullable<T> {
-        debug(this, "toggling", { ctrl: Constructor.name, enable });
-        if (enable) {
-            ctrl = new Constructor(this);
-            this.addController(ctrl);
-        } else {
-            if (ctrl) this.removeController(ctrl);
-            ctrl = null;
-        }
-        return ctrl;
-    }
-    
-    override addController(ctrl: BabylonController) {
-        super.addController(ctrl);
-        if (this.hasUpdated) ctrl.init();
-    }
-
-    override removeController(ctrl: BabylonController) {
-        ctrl.dispose?.();
-        super.removeController(ctrl);
     }
 
     #startRendering() {
@@ -186,6 +151,37 @@ export class MyBabylonElem extends ReactiveElement {
         queueEvent(this, "babylon.updated", {});
     }
 
+    _pickingCtrl = new PickingController(this);
+
+    _movingCtrl: Nullable<MovingController> = null;
+
+    _highlightingCtrl: Nullable<HighlightingController> = null;
+
+    _shufflingCtrl: Nullable<ShufflingController> = null;
+
+    /** setting up controllers dynamically from property changes  */
+    _toggleCtrl<T extends BabylonController>(ctrl: Nullable<T>, enable: boolean, Constructor: new (elem: BabylonElem) => T): Nullable<T> {
+        debug(this, "toggling", { ctrl: Constructor.name, enable });
+        if (enable) {
+            ctrl = new Constructor(this);
+            this.addController(ctrl);
+        } else {
+            if (ctrl) this.removeController(ctrl);
+            ctrl = null;
+        }
+        return ctrl;
+    }
+
+    override addController(ctrl: BabylonController) {
+        super.addController(ctrl);
+        if (this.hasUpdated) ctrl.init();
+    }
+
+    override removeController(ctrl: BabylonController) {
+        ctrl.dispose?.();
+        super.removeController(ctrl);
+    }
+
     override connectedCallback(): void {
         super.connectedCallback();
         this.#renderHTML();
@@ -194,7 +190,7 @@ export class MyBabylonElem extends ReactiveElement {
         this.scene.onModelUpdatedObservable.add(() => this.#invalidateCtx());
         this.#resizingObs.observe(this);
         this.#visibilityObs.observe(this);
-            }
+    }
 
     override disconnectedCallback(): void {
         this.#resizingObs.disconnect();
@@ -209,12 +205,12 @@ export class MyBabylonElem extends ReactiveElement {
         this.scene = new MyScene(this.engine);
         this.scene.useRightHandedSystem = this.rightHanded;
         this.scene.clearColor = Color4.FromHexString(getComputedStyle(this).getPropertyValue("--my-background-color"));
-        
+
         // initial context should be available to all components
         this.model = {
             bounds: null,
             world: null,
-        }
+        };
     }
 
     #dispose() {
@@ -226,7 +222,9 @@ export class MyBabylonElem extends ReactiveElement {
         if (changes.has("highlighting")) this._highlightingCtrl = this._toggleCtrl(this._highlightingCtrl, this.highlighting, HighlightingController);
         if (changes.has("moving")) this._movingCtrl = this._toggleCtrl(this._movingCtrl, this.moving, MovingController);
         if (changes.has("shuffling")) this._shufflingCtrl = this._toggleCtrl(this._shufflingCtrl, this.shuffling, ShufflingController);
+
         if (changes.has("_ctx_dirty") && this._ctx_dirty) this.#refreshCtx();
+        
         super.update(changes);
     }
 
