@@ -34,6 +34,7 @@ export class MyGhostElem extends ReactiveElement {
         this._mesh.isPickable = false;
         this._mesh.material = new BackgroundMaterial("(ghost)", this.scene);
         this._mesh.material.alpha = 0.25;
+        this._mesh.material.wireframe = true;
         
         this._bhv = new GhostBehavior();
         this._bhv.attach(this._mesh);
