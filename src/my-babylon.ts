@@ -51,9 +51,6 @@ export class MyBabylonElem extends ReactiveElement {
     moving = false;
 
     @property({ type: Boolean })
-    highlighting = false;
-
-    @property({ type: Boolean })
     shuffling = false;
 
     @property({ type: Boolean })
