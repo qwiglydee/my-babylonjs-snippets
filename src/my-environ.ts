@@ -11,10 +11,10 @@ import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { Tags } from "@babylonjs/core/Misc/tags";
 import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
+import { assertNonNull } from "@utils/asserts";
+import { debug } from "@utils/debug";
 
 import { sceneCtx } from "./context";
-import { assertNonNull } from "./utils/asserts";
-import { debug } from "./utils/debug";
 
 @customElement("my-environ")
 export class MyEnvironElem extends ReactiveElement {

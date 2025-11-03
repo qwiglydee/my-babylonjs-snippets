@@ -1,7 +1,7 @@
 import { KeyboardEventTypes, type KeyboardInfo } from "@babylonjs/core/Events/keyboardEvents";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 
-import { debug } from "../utils/debug";
+import { debug } from "@utils/debug";
 import { BabylonController } from "./base";
 
 export class ShufflingController extends BabylonController {

@@ -2,8 +2,8 @@ import { consume, provide } from "@lit/context";
 import { ReactiveElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
-import type { Scene } from "@babylonjs/core/scene";
 import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
+import type { Scene } from "@babylonjs/core/scene";
 
 import { sceneCtx } from "./context";
 

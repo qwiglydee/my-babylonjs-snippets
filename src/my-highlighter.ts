@@ -9,9 +9,9 @@ import { Color3 } from "@babylonjs/core/Maths";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
+import { debug } from "@utils/debug";
 
 import { pickCtx, sceneCtx } from "./context";
-import { debug } from "./utils/debug";
 
 @customElement("my-highlighter")
 export class MySomethingElem extends ReactiveElement {

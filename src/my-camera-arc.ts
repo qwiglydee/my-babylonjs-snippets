@@ -6,10 +6,9 @@ import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { Vector3 } from "@babylonjs/core/Maths";
 import { Tools } from "@babylonjs/core/Misc/tools";
 import type { Scene } from "@babylonjs/core/scene";
+import { debug } from "@utils/debug";
 
-import { sceneCtx, type ModelCtx, modelCtx } from "./context";
-import { assertNonNull } from "./utils/asserts";
-import { debug } from "./utils/debug";
+import { modelCtx, sceneCtx, type ModelCtx } from "./context";
 
 @customElement("my-camera-arc")
 export class MyArcCameraElem extends ReactiveElement {

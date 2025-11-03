@@ -3,9 +3,9 @@ import { ReactiveElement, type PropertyValues } from "lit";
 import { customElement, state } from "lit/decorators.js";
 
 import type { Scene } from "@babylonjs/core/scene";
+import { debug, debugChanges } from "@utils/debug";
 
-import { sceneCtx, type ModelCtx, modelCtx } from "./context";
-import { debug, debugChanges } from "./utils/debug";
+import { modelCtx, sceneCtx, type ModelCtx } from "./context";
 
 @customElement("my-something")
 export class MySomethingElem extends ReactiveElement {

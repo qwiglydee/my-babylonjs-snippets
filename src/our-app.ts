@@ -1,9 +1,10 @@
+import { provide } from "@lit/context";
 import { ReactiveElement, type PropertyValues } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { provide } from "@lit/context";
 
-import { type AppCtx, appCtx, type PickEvent } from "./context";
-import { debug, debugChanges } from "./utils/debug";
+import { debug, debugChanges } from "@utils/debug";
+
+import { appCtx, type AppCtx, type PickEvent } from "./context";
 
 /**
  * Babylon-unaware web app

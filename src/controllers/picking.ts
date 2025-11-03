@@ -1,7 +1,7 @@
 import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
 import { PointerEventTypes, type PointerInfo } from "@babylonjs/core/Events/pointerEvents";
 
-import { debug } from "../utils/debug";
+import { debug } from "@utils/debug";
 import { BabylonController } from "./base";
 
 export class PickingController extends BabylonController {

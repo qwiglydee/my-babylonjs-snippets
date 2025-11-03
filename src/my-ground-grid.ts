@@ -8,13 +8,13 @@ import { CreateGround } from "@babylonjs/core/Meshes/Builders/groundBuilder";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { Tags } from "@babylonjs/core/Misc/tags";
 import type { Scene } from "@babylonjs/core/scene";
+import type { Nullable } from "@babylonjs/core/types";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
+import { assertNonNull } from "@utils/asserts";
+import { debug } from "@utils/debug";
 
 import { modelCtx, sceneCtx, type ModelCtx } from "./context";
 
-import type { Nullable } from "@babylonjs/core/types";
-import { assertNonNull } from "./utils/asserts";
-import { debug } from "./utils/debug";
 
 
 @customElement("my-ground-grid")

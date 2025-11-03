@@ -14,6 +14,9 @@ export default function (env, argv) {
         },
         resolve: {
             extensions: [".ts", ".js"],
+            alias: {
+                '@utils': path.resolve("./utils/"),
+            }
         },
         module: {
             rules: [

@@ -2,6 +2,7 @@ import { consume } from "@lit/context";
 import { ReactiveElement, type PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
+import { BackgroundMaterial } from "@babylonjs/core/Materials/Background/backgroundMaterial";
 import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import { Color3, Vector2 } from "@babylonjs/core/Maths";
 import { CreateGround } from "@babylonjs/core/Meshes/Builders/groundBuilder";
@@ -9,11 +10,9 @@ import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { Tags } from "@babylonjs/core/Misc/tags";
 import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
+import { assertNonNull } from "@utils/asserts";
 
-import { BackgroundMaterial } from "@babylonjs/core/Materials/Background/backgroundMaterial";
-import { sceneCtx, type ModelCtx, modelCtx } from "./context";
-import { assertNonNull } from "./utils/asserts";
-// import { debug } from "./utils/debug";
+import { modelCtx, sceneCtx, type ModelCtx } from "./context";
 
 
 @customElement("my-ground-flat")

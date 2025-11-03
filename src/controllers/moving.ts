@@ -1,7 +1,7 @@
 import { PointerDragBehavior } from "@babylonjs/core/Behaviors/Meshes/pointerDragBehavior";
 import { Vector3 } from "@babylonjs/core/Maths";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
-import { debug } from "../utils/debug";
+import { debug } from "@utils/debug";
 import { BabylonController } from "./base";
 
 export class MovingController extends BabylonController {

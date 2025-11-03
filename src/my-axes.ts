@@ -4,9 +4,9 @@ import { customElement, property } from "lit/decorators.js";
 
 import { AxesViewer } from "@babylonjs/core/Debug/axesViewer";
 import type { Scene } from "@babylonjs/core/scene";
+import { debug, debugChanges } from "@utils/debug";
 
 import { sceneCtx } from "./context";
-import { debug, debugChanges } from "./utils/debug";
 
 @customElement("my-axes")
 export class MyAxesElem extends ReactiveElement {

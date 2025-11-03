@@ -7,9 +7,9 @@ import { Vector3 } from "@babylonjs/core/Maths";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import type { Scene } from "@babylonjs/core/scene";
+import { debug } from "@utils/debug";
 
 import { sceneCtx } from "./context";
-import { debug } from "./utils/debug";
 
 @customElement("my-stuff")
 export class MyStuffElem extends ReactiveElement {

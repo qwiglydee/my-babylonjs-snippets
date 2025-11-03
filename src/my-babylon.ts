@@ -7,16 +7,16 @@ import { Engine } from "@babylonjs/core/Engines/engine";
 import type { EngineOptions } from "@babylonjs/core/Engines/thinEngine";
 import { Color4 } from "@babylonjs/core/Maths";
 import type { Nullable } from "@babylonjs/core/types";
+import { debug } from "@utils/debug";
+import { queueEvent } from "@utils/events";
 
 import { modelCtx, pickCtx, sceneCtx, type BabylonElem, type ModelCtx, type PickDetail } from "./context";
 import { BabylonController } from "./controllers/base";
+import { KillingController } from "./controllers/killing";
 import { MovingController } from "./controllers/moving";
 import { PickingController } from "./controllers/picking";
 import { ShufflingController } from "./controllers/shuffling";
 import { MyScene } from "./scene";
-import { debug } from "./utils/debug";
-import { queueEvent } from "./utils/events";
-import { KillingController } from "./controllers/killing";
 
 const ENGOPTIONS: EngineOptions = {
     antialias: true,
