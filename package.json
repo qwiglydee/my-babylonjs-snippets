@@ -1,25 +1,30 @@
 {
   "name": "my-babylonjs-snippets",
   "private": true,
-  "version": "1.0.6",
   "author": "qwiglydee@gmail.com",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 8000",
-    "build": "tsc && vite build"
+    "build": "webpack --mode production",
+    "serve": "webpack serve --port 8000 --mode development"
   },
   "dependencies": {
     "@babylonjs/core": "^8.0.0",
     "@babylonjs/gui": "^8.0.0",
     "@babylonjs/loaders": "^8.0.0",
     "@babylonjs/materials": "^8.0.0",
-    "@lit/context": "^1.1.6",
-    "lit": "^3.3.0"
+    "@lit/context": "^1.0.0",
+    "lit": "^3.0.0"
   },
   "devDependencies": {
-    "@lit-labs/rollup-plugin-minify-html-literals": "^0.1.0",
-    "tslib": "^2.8.1",
-    "typescript": "^5.9.2",
-    "vite": "^7.1.0"
+    "copy-webpack-plugin": "^13.0.1",
+    "html-webpack-plugin": "^5.0.0",
+    "minify-html-literals-loader": "^1.0.0",
+    "terser-webpack-plugin": "^5.0.0",
+    "ts-loader": "^9.0.0",
+    "tslib": "^2.0.0",
+    "typescript": "^5.0.0",
+    "webpack": "^5.0.0",
+    "webpack-cli": "^6.0.0",
+    "webpack-dev-server": "^5.0.0"
   }
 }
