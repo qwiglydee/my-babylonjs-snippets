@@ -10,7 +10,9 @@ import type { Nullable } from "@babylonjs/core/types";
 import { debug } from "@utils/debug";
 import { queueEvent } from "@utils/events";
 
-import { modelCtx, pickCtx, sceneCtx, type BabylonElem, type ModelCtx, type PickDetail } from "./context";
+import { modelCtx, pickCtx, sceneCtx, type BabylonElem, type ModelCtx } from "./context";
+import { PickDetail } from "../our/context";
+
 import { BabylonController } from "./controllers/base";
 import { KillingController } from "./controllers/killing";
 import { MovingController } from "./controllers/moving";

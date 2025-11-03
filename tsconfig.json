@@ -27,5 +27,9 @@
       "@utils/*": ["./utils/*"]
     }
   },
-  "include": ["src"],
+  "include": [
+    "src/our",
+    "src/my",
+    "utils"
+  ],
 }

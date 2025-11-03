@@ -1,30 +1,6 @@
 import type { ReactiveElement } from "lit";
 import { createContext } from "@lit/context";
 
-/**** main app ****/
-
-export interface AppCtx {
-    status: string;
-    foo: string;
-}
-
-export const appCtx = createContext<AppCtx>(Symbol('app'));
-
-export interface AppElement {
-    ctx: AppCtx;
-}
-
-/**** shared  ****/
-
-export interface PickDetail {
-    mesh?: string;
-    state?: string;
-}
-export type PickEvent = CustomEvent<PickDetail>;
-
-
-/**** babylon stuff ****/
-
 import type { PickingInfo } from "@babylonjs/core/Collisions/pickingInfo";
 import type { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
 import type { Scene } from "@babylonjs/core/scene";

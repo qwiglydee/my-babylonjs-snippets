@@ -13,7 +13,7 @@ const SCNOPTIONS: SceneOptions = {};
 
 
 export class MyScene extends Scene {
-    // observe when something added/removed or moved around
+    // when content changed
     onModelUpdatedObservable: Observable<AbstractMesh[]> = new Observable();
 
     constructor(engine: Engine) {
