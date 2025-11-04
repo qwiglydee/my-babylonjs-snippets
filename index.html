@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>MyBabylon test page</title>
         <link rel="stylesheet" href="bootstrap.min.css" />
+        <script src="fullscreen.js"></script>
         <style>
             our-app {
                 position: relative;
@@ -13,7 +14,8 @@
                 width: 960px;
                 height: 720px;
                 min-height: 360px;
-                margin: auto;
+                max-height: 75vh;
+                margin: 0.5rem auto;
             }
 
             our-app.fullscreen {
@@ -21,61 +23,68 @@
                 top: 0;
                 left: 0;
                 width: 100vw;
-                height: var(--vh100, 100vh);
-                border: none !important;
-                border-radius: 0 !important;
+                height: var(--vh100, 100vh); /* from fullscreen.js */
+                max-height: none;
+                margin: 0;
+            }
+
+            our-app my-babylon {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                background-color: var(--bs-dark);
+                border: 1px solid black;
+                border-radius: 1rem;
+                overflow: hidden;
+            }
+
+            our-app.fullscreen my-babylon {
+                border: none;
+                border-radius: 0;
             }
 
             our-status {
                 position: absolute;
                 display: block;
-                width: 100%;
                 min-height: 1rem;
                 bottom: 0;
-                background-color: var(--bs-light);
-            }
-
-            my-babylon {
-                position: absolute;
                 width: 100%;
-                height: 100%;
-                --my-background-color: var(--bs-dark);
+                color: var(--bs-yellow);
             }
 
-            .bi-btn {
-                fill: var(--bs-primary);
+
+            .icon {
+                stroke: currentColor;
+                fill: currentColor;
                 pointer-events: auto;
             }
         </style>
-        <script src="fullscreen.js"></script>
-        <script type="module" src="src/our/index.js"></script>
-        <script type="module" src="src/my/index.js"></script>
     </head>
 
     <body class="container bg-light">
-        <our-app class="p-0 border rounded-3">
+        <our-app>
             <my-babylon picking moving shuffling killing>
                 <my-camera-arc autoSpin autoZoom autoFocus focusFactor="0.5"></my-camera-arc>
                 <my-environ src="assets/studio.env" sky skyIntens="0.25" skyBlur="0.25"></my-environ>
-                <my-ground-flat src="assets/ground.png" autoSize color="#001010"></my-ground>
+                <my-ground-flat src="assets/ground.png" autoSize color="#001010"></my-ground-flat>
                 <my-stuff radius="4" count="3" shuffling></my-stuff>
 
                 <my-layer id="utility">
-                    <my-ground-grid src="assets/ground.png" autoSize></my-ground>
+                    <my-ground-grid src="assets/ground.png" autoSize></my-ground-grid>
                     <my-axes></my-axes>
                 </my-layer>
 
                 <my-highlighter color="#0000ff"></my-highlighter>
 
-                <div slot="overlay" style="position: absolute; top: 4px; left: 4px">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="bi" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
+                <div slot="overlay" style="position: absolute; top: 4px; left: 8px">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon text-light" height="24px" viewBox="0 -960 960 960" width="24px">
                         <path
                             d="M520-360h120q33 0 56.5-23.5T720-440v-80q0-33-23.5-56.5T640-600H520v240Zm60-60v-120h60q8 0 14 6t6 14v80q0 8-6 14t-14 6h-60Zm-320 60h140q17 0 28.5-11.5T440-400v-40q0-17-11.5-28.5T400-480q17 0 28.5-11.5T440-520v-40q0-17-11.5-28.5T400-600H260v60h120v30h-80v60h80v30H260v60ZM160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h640v-480H160v480Zm0 0v-480 480Z"
                         />
                     </svg>
                 </div>
-                <div slot="overlay" style="position: absolute; top: 4px; right: 4px">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="bi bi-btn" height="24px" viewBox="0 -960 960 960" width="24px" onclick="toggleFullscreen()">
+                <div slot="overlay" style="position: absolute; top: 4px; right: 8px">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon text-primary" height="24px" viewBox="0 -960 960 960" width="24px" onclick="toggleFullscreen()">
                         <path
                             d="M120-120v-200h80v120h120v80H120Zm520 0v-80h120v-120h80v200H640ZM120-640v-200h200v80H200v120h-80Zm640 0v-120H640v-80h200v200h-80Z"
                         />
@@ -119,12 +128,6 @@
             });
 
             // setTimeout(() => my.stuff?.createItem(), 3000);
-        </script>
-
-        <script type="module">
-            import { Vector3, Color3 } from "@babylonjs/core/Maths";
-            window.V3 = Vector3;
-            window.C3 = Color3;
         </script>
     </body>
 </html>

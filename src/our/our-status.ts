@@ -14,16 +14,13 @@ export class OurStatusElem extends LitElement {
     static override styles = css`
         :host {
             display: block;
-        }
-
-        .message {
             text-align: center;
         }
     `
 
     override render() {
         return html`
-            <div class="message">${this.ctx.status}</div>
+            <span>${this.ctx.status}</span>
         `
     }
 }

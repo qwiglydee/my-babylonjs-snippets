@@ -53,6 +53,9 @@ export default function (env, argv) {
                 include: [/mybabylon/],
             }),
         ],
+        performance: {
+            maxEntrypointSize: 5000000,
+        },
         optimization: {
             minimize: isproduction,
             minimizer: [new TerserPlugin({

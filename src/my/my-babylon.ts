@@ -62,7 +62,6 @@ export class MyBabylonElem extends ReactiveElement {
         :host {
             display: block;
             position: relative;
-            background-color: var(--my-background-color, #808080);
         }
 
         canvas {
