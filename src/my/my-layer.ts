@@ -5,10 +5,12 @@ import { customElement, property } from "lit/decorators.js";
 import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
 import type { Scene } from "@babylonjs/core/scene";
 
+import { WithoutShadow } from "@utils/noshadow";
+
 import { sceneCtx } from "./context";
 
 @customElement("my-layer")
-export class MyLayerElem extends ReactiveElement {
+export class MyLayerElem extends WithoutShadow(ReactiveElement) {
     @consume({ context: sceneCtx, subscribe: false })
     original!: Scene;
 

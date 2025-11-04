@@ -7,11 +7,12 @@ import { Vector3 } from "@babylonjs/core/Maths";
 import { Tools } from "@babylonjs/core/Misc/tools";
 import type { Scene } from "@babylonjs/core/scene";
 import { debug } from "@utils/debug";
+import { WithoutShadow } from "@utils/noshadow";
 
 import { modelCtx, sceneCtx, type ModelCtx } from "./context";
 
 @customElement("my-camera-arc")
-export class MyArcCameraElem extends ReactiveElement {
+export class MyArcCameraElem extends WithoutShadow(ReactiveElement) {
     @consume({ context: sceneCtx, subscribe: false })
     scene!: Scene;
 

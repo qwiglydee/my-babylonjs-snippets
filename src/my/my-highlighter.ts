@@ -10,11 +10,12 @@ import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
 import { debug } from "@utils/debug";
+import { WithoutShadow } from "@utils/noshadow";
 
 import { pickCtx, sceneCtx } from "./context";
 
 @customElement("my-highlighter")
-export class MySomethingElem extends ReactiveElement {
+export class MySomethingElem extends WithoutShadow(ReactiveElement) {
     @consume({ context: sceneCtx, subscribe: false })
     scene!: Scene;
 
@@ -31,7 +32,7 @@ export class MySomethingElem extends ReactiveElement {
 
     override connectedCallback(): void {
         super.connectedCallback();
-        this.#init()
+        this.#init();
     }
 
     #init() {
@@ -40,8 +41,8 @@ export class MySomethingElem extends ReactiveElement {
     }
 
     override update(changes: PropertyValues) {
-        if (changes.has('color')) this._color = Color3.FromHexString(this.color);
-        if (changes.has('pick')) {
+        if (changes.has("color")) this._color = Color3.FromHexString(this.color);
+        if (changes.has("pick")) {
             const picked = this.pick?.pickedMesh ?? null;
             if (picked) this._highlight(picked as Mesh);
             else this.clear();

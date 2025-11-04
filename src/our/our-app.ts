@@ -2,17 +2,18 @@ import { provide } from "@lit/context";
 import { ReactiveElement, type PropertyValues } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
-import { debug, debugChanges } from "@utils/debug";
 import { assertNonNull } from "@utils/asserts";
+import { debug, debugChanges } from "@utils/debug";
+import { WithoutShadow } from "@utils/noshadow";
 
-import { type IAppElement, type IBabylonElement, appCtx, babylonCtx, type AppCtx, type PickEvent } from "./context";
+import { appCtx, babylonCtx, type AppCtx, type IAppElement, type IBabylonElement, type PickEvent } from "./context";
 
 /**
  * Babylon-unaware web app
  * For orchestrating purposes only
  */
 @customElement("our-app")
-export class OurAppElem extends ReactiveElement implements IAppElement{
+export class OurAppElem extends WithoutShadow(ReactiveElement) implements IAppElement{
     @provide({ context: babylonCtx })
     babylon!: IBabylonElement;
 
@@ -29,10 +30,6 @@ export class OurAppElem extends ReactiveElement implements IAppElement{
     constructor() {
         super();
         this.addEventListener('babylon.picked', this.onbabylonpick as EventListener);
-    }
-
-    override createRenderRoot() {
-        return this;
     }
 
     override connectedCallback(): void {

@@ -4,11 +4,12 @@ import { customElement, state } from "lit/decorators.js";
 
 import type { Scene } from "@babylonjs/core/scene";
 import { debug, debugChanges } from "@utils/debug";
+import { WithoutShadow } from "@utils/noshadow";
 
 import { modelCtx, sceneCtx, type ModelCtx } from "./context";
 
 @customElement("my-something")
-export class MySomethingElem extends ReactiveElement {
+export class MySomethingElem extends WithoutShadow(ReactiveElement) {
     @consume({ context: sceneCtx, subscribe: false })
     scene!: Scene;
 
@@ -18,7 +19,7 @@ export class MySomethingElem extends ReactiveElement {
 
     override connectedCallback(): void {
         super.connectedCallback();
-        this.#init()
+        this.#init();
     }
 
     #init() {

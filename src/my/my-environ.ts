@@ -13,11 +13,12 @@ import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
 import { assertNonNull } from "@utils/asserts";
 import { debug } from "@utils/debug";
+import { WithoutShadow } from "@utils/noshadow";
 
 import { sceneCtx } from "./context";
 
 @customElement("my-environ")
-export class MyEnvironElem extends ReactiveElement {
+export class MyEnvironElem extends WithoutShadow(ReactiveElement) {
     @consume({ context: sceneCtx, subscribe: false })
     scene!: Scene;
 

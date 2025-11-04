@@ -12,13 +12,12 @@ import type { Nullable } from "@babylonjs/core/types";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
 import { assertNonNull } from "@utils/asserts";
 import { debug } from "@utils/debug";
+import { WithoutShadow } from "@utils/noshadow";
 
 import { modelCtx, sceneCtx, type ModelCtx } from "./context";
 
-
-
 @customElement("my-ground-grid")
-export class MyGridGroundElem extends ReactiveElement {
+export class MyGridGroundElem extends WithoutShadow(ReactiveElement) {
     @consume({ context: sceneCtx, subscribe: false })
     @state()
     scene!: Scene;
@@ -53,7 +52,7 @@ export class MyGridGroundElem extends ReactiveElement {
     _size: number = 0;
 
     override connectedCallback(): void {
-        assertNonNull(this.src, `${this.tagName}.src is required`)
+        assertNonNull(this.src, `${this.tagName}.src is required`);
         super.connectedCallback();
         this.#init();
     }
@@ -80,7 +79,7 @@ export class MyGridGroundElem extends ReactiveElement {
     }
 
     #calcSize() {
-        return this.model.world ? 2 * (new Vector2(this.model.world.extendSize.x, this.model.world.extendSize.z)).length() : this.defaultSize;
+        return this.model.world ? 2 * new Vector2(this.model.world.extendSize.x, this.model.world.extendSize.z).length() : this.defaultSize;
     }
 
     #resize() {
@@ -92,7 +91,7 @@ export class MyGridGroundElem extends ReactiveElement {
 
     override update(changes: PropertyValues) {
         if (this.autoSize && (changes.has("model") || changes.has("autoSize"))) this._size = this.#calcSize();
-        if (!this.autoSize && changes.has('defaultSize')) this._size = this.defaultSize;
+        if (!this.autoSize && changes.has("defaultSize")) this._size = this.defaultSize;
         if (changes.has("_size")) this.#resize();
         if (changes.has("opacity")) this._material.opacity = this.opacity;
         if (changes.has("opacity2")) this._material.minorUnitVisibility = this.opacity2;

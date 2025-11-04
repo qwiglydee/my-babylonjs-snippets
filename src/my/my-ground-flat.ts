@@ -11,12 +11,13 @@ import { Tags } from "@babylonjs/core/Misc/tags";
 import type { Scene } from "@babylonjs/core/scene";
 import type { Nullable } from "@babylonjs/core/types";
 import { assertNonNull } from "@utils/asserts";
+import { WithoutShadow } from "@utils/noshadow";
 
 import { modelCtx, sceneCtx, type ModelCtx } from "./context";
 
 
 @customElement("my-ground-flat")
-export class MyFlatGroundElem extends ReactiveElement {
+export class MyFlatGroundElem extends WithoutShadow(ReactiveElement) {
     @consume({ context: sceneCtx, subscribe: false })
     scene!: Scene;
 

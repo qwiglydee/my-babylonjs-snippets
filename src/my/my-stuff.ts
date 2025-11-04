@@ -8,11 +8,12 @@ import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import type { Scene } from "@babylonjs/core/scene";
 import { debug } from "@utils/debug";
+import { WithoutShadow } from "@utils/noshadow";
 
 import { sceneCtx } from "./context";
 
 @customElement("my-stuff")
-export class MyStuffElem extends ReactiveElement {
+export class MyStuffElem extends WithoutShadow(ReactiveElement) {
     @consume({ context: sceneCtx, subscribe: false })
     scene!: Scene;
 
