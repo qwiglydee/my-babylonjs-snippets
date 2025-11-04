@@ -8,7 +8,8 @@
     "skipLibCheck": true,
     "moduleResolution": "node",
     "sourceMap": false,
-    
+    "importHelpers": true,
+
     /* Linting */
     "strict": true,
     "strictNullChecks": true,

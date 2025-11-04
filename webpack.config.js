@@ -75,15 +75,6 @@ export default function (env, argv) {
             },
         },
     };
-        config.optimization.splitChunks = {
-            chunks: "all",
-            name: (module, chunks, cacheGroupKey) => {
-                const path = module.userRequest;
-                if (/\/@babylonjs\//.test(path)) return "babylonjs";
-                else if (/\/(@lit|lit|lit-html|lit-element)\//.test(path)) return "lit";
-                else if (/\/node_modules\//.test(path)) return "vendor";
-            },
-        };
 
     if (isproduction) {
         config.optimization.splitChunks = {
