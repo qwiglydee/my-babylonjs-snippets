@@ -12,11 +12,11 @@ export const appCtx = createContext<AppCtx>(Symbol('app'));
 
 
 export interface PickDetail {
-    state?: string;
-    mesh?: string;
+    name: string, 
+    id: string;
 }
 
-export type PickEvent = CustomEvent<PickDetail>;
+export type PickEvent = CustomEvent<PickDetail | null>;
 
 
 /** some public api of the elem  */

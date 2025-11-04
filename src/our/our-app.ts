@@ -59,11 +59,10 @@ export class OurAppElem extends ReactiveElement implements IAppElement{
     }
 
     onbabylonpick = (e: PickEvent) => {
-        const { state, mesh } = e.detail;
-        if (!state) this.#updateCtx({status: "..."});
-        else if (state == 'picked') {
-            if(mesh) this.#updateCtx({status: `Picked: ${mesh}`});
-            else this.#updateCtx({status: "..."});
+        if (e.detail) {
+            this.#updateCtx({ status: `Selected: ${e.detail.name} (#${e.detail.id})` });
+        } else {
+            this.#updateCtx({ status: "..." });
         }
     }
 } 
