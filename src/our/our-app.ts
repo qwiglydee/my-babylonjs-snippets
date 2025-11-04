@@ -3,15 +3,19 @@ import { ReactiveElement, type PropertyValues } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 import { debug, debugChanges } from "@utils/debug";
+import { assertNonNull } from "@utils/asserts";
 
-import { appCtx, type AppCtx, type PickEvent } from "./context";
+import { type IAppElement, type IBabylonElement, appCtx, babylonCtx, type AppCtx, type PickEvent } from "./context";
 
 /**
  * Babylon-unaware web app
  * For orchestrating purposes only
  */
 @customElement("our-app")
-export class OurAppElem extends ReactiveElement {
+export class OurAppElem extends ReactiveElement implements IAppElement{
+    @provide({ context: babylonCtx })
+    babylon!: IBabylonElement;
+
     @provide({ context: appCtx })
     ctx!: AppCtx;
 
@@ -34,6 +38,10 @@ export class OurAppElem extends ReactiveElement {
     override connectedCallback(): void {
         super.connectedCallback();
         debug(this, "initializing");
+        // @ts-ignore
+        this.babylon = this.querySelector('my-babylon') as IBabylonElement;
+        
+        assertNonNull(this.babylon, "missing my babylon");
         this.ctx = {
             status: "Hello",
             foo: "..."

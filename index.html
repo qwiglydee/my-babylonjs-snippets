@@ -51,12 +51,19 @@
                 width: 100%;
                 color: var(--bs-yellow);
             }
-
-
+        
             .icon {
                 stroke: currentColor;
                 fill: currentColor;
                 pointer-events: auto;
+            }
+
+            our-something {
+                position: absolute;
+                bottom: 0;
+                left: 8px;
+                z-index: 2;
+                color: white;
             }
         </style>
     </head>
@@ -92,6 +99,7 @@
                 </div>
             </my-babylon>
             <our-status></our-status>
+            <our-something></our-something>
         </our-app>
 
         <script>
@@ -101,10 +109,7 @@
             };
             var my = {
                 babylon: document.querySelector("my-babylon"),
-                environ: document.querySelector("my-environ"),
-                ground: document.querySelector("my-ground"),
                 stuff: document.querySelector("my-stuff"),
-                camera: document.querySelector("my-camera-arc"),
             };
 
             function toggleFullscreen() {

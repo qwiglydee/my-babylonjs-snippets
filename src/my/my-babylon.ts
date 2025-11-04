@@ -11,7 +11,7 @@ import { debug } from "@utils/debug";
 import { queueEvent } from "@utils/events";
 
 import { modelCtx, pickCtx, sceneCtx, type BabylonElem, type ModelCtx } from "./context";
-import { PickDetail } from "../our/context";
+import { IBabylonElement, PickDetail } from "../our/context";
 
 import { BabylonController } from "./controllers/base";
 import { KillingController } from "./controllers/killing";
@@ -30,7 +30,7 @@ const ENGOPTIONS: EngineOptions = {
  * Babylon-aware component and context
  */
 @customElement("my-babylon")
-export class MyBabylonElem extends ReactiveElement {
+export class MyBabylonElem extends ReactiveElement implements IBabylonElement {
     @query("canvas")
     canvas!: HTMLCanvasElement;
 
@@ -191,6 +191,7 @@ export class MyBabylonElem extends ReactiveElement {
         this.scene.onModelUpdatedObservable.add(() => this.#invalidateCtx());
         this.#resizingObs.observe(this);
         this.#visibilityObs.observe(this);
+        queueEvent(this, "babylon.init");
     }
 
     override disconnectedCallback(): void {
@@ -233,6 +234,15 @@ export class MyBabylonElem extends ReactiveElement {
     override updated(changes: PropertyValues) {
         if (changes.has("pick")) {
             queueEvent<PickDetail>(this, "babylon.picked", { state: "picked", mesh: this.pick?.pickedMesh?.id });
+        }
+    }
+
+    getWorldSize(): { x: number; y: number; z: number; } {
+        const bbox = this.scene.getWorldBounds();
+        return {
+            x: bbox!.extendSizeWorld.x * 2,
+            y: bbox!.extendSizeWorld.y * 2,
+            z: bbox!.extendSizeWorld.z * 2,
         }
     }
 }

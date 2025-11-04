@@ -8,10 +8,6 @@ export interface AppCtx {
 }
 
 
-export interface AppElement {
-    ctx: AppCtx;
-}
-
 export const appCtx = createContext<AppCtx>(Symbol('app'));
 
 
@@ -22,3 +18,19 @@ export interface PickDetail {
 
 export type PickEvent = CustomEvent<PickDetail>;
 
+
+/** some public api of the elem  */
+export interface IBabylonElement extends HTMLElement {
+    getWorldSize(): { x: number, y: number, z: number }
+}
+
+export const babylonCtx = createContext<IBabylonElement>(Symbol('babylon'));
+
+
+export interface IAppElement  extends HTMLElement {
+    ctx: AppCtx;
+    babylon: IBabylonElement; 
+}
+
+
+// TODO: define events' types and details
