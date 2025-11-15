@@ -8,7 +8,7 @@ import type { EngineOptions } from "@babylonjs/core/Engines/thinEngine";
 import { Color4 } from "@babylonjs/core/Maths";
 import type { Nullable } from "@babylonjs/core/types";
 import { debug } from "@utils/debug";
-import { queueEvent } from "@utils/events";
+import { bubbleEvent, queueEvent } from "@utils/events";
 
 import { modelCtx, pickCtx, sceneCtx, type BabylonElem, type ModelCtx } from "./context";
 import { IBabylonElement, PickDetail } from "../our/context";
@@ -149,7 +149,7 @@ export class MyBabylonElem extends ReactiveElement implements IBabylonElement {
         };
         this._ctx_dirty = false;
         debug(this, `CTX ===`, this.model);
-        queueEvent(this, "babylon.updated", {});
+        queueEvent(this, "babylon.updated");
     }
 
     _pickingCtrl = new PickingController(this);
@@ -191,7 +191,7 @@ export class MyBabylonElem extends ReactiveElement implements IBabylonElement {
         this.scene.onModelUpdatedObservable.add(() => this.#invalidateCtx());
         this.#resizingObs.observe(this);
         this.#visibilityObs.observe(this);
-        queueEvent(this, "babylon.init");
+        this.scene.onReadyObservable.addOnce(() => bubbleEvent(this, "babylon.init"));
     }
 
     override disconnectedCallback(): void {

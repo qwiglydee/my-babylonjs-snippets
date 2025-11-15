@@ -44,12 +44,7 @@
             }
 
             our-status {
-                position: absolute;
-                display: block;
-                min-height: 1rem;
-                bottom: 0;
                 width: 100%;
-                color: var(--bs-yellow);
             }
         
             .icon {
@@ -98,9 +93,10 @@
                     </svg>
                 </div>
             </my-babylon>
-            <our-status></our-status>
             <our-something></our-something>
         </our-app>
+
+        <our-status></our-status>
 
         <script>
             var our = {
@@ -116,21 +112,14 @@
                 our.app.classList.toggle("fullscreen");
             }
 
-            my.babylon.addEventListener("babylon.updated", function (e) {
+            function debugEvent(e) {
                 console.debug(e.type, e.detail);
-            });
+            }
 
-            my.babylon.addEventListener("babylon.picked", function (e) {
-                console.debug(e.type, e.detail);
-            });
-
-            my.babylon.addEventListener("babylon.grabbed", function (e) {
-                console.debug(e.type, e.detail);
-            });
-
-            my.babylon.addEventListener("babylon.dropped", function (e) {
-                console.debug(e.type, e.detail);
-            });
+            our.app.addEventListener("app.status", debugEvent);
+            my.babylon.addEventListener("babylon.init", debugEvent);
+            my.babylon.addEventListener("babylon.updated", debugEvent);
+            my.babylon.addEventListener("babylon.picked", debugEvent);
 
             // setTimeout(() => my.stuff?.createItem(), 3000);
         </script>

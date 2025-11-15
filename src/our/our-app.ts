@@ -1,65 +1,34 @@
-import { provide } from "@lit/context";
-import { ReactiveElement, type PropertyValues } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { PropertyValues, ReactiveElement } from "lit";
+import { customElement, state } from "lit/decorators.js";
 
-import { assertNonNull } from "@utils/asserts";
-import { debug, debugChanges } from "@utils/debug";
 import { WithoutShadow } from "@utils/noshadow";
-
-import { appCtx, babylonCtx, type AppCtx, type IAppElement, type IBabylonElement, type PickEvent } from "./context";
+import { queueEvent } from "@utils/events";
+import { PickEvent } from "./context";
 
 /**
  * Babylon-unaware web app
  * For orchestrating purposes only
  */
 @customElement("our-app")
-export class OurAppElem extends WithoutShadow(ReactiveElement) implements IAppElement{
-    @provide({ context: babylonCtx })
-    babylon!: IBabylonElement;
-
-    @provide({ context: appCtx })
-    ctx!: AppCtx;
-
-    #updateCtx(props: object) {
-        this.ctx = { ...this.ctx, ...props};
-    }
-
-    @property()
-    foo: string = "Foo";
-
-    constructor() {
-        super();
-        this.addEventListener('babylon.picked', this.onbabylonpick as EventListener);
-    }
-
+export class OurAppElem extends WithoutShadow(ReactiveElement) {
+    @state()
+    status: string = "...";
+    
     override connectedCallback(): void {
         super.connectedCallback();
-        debug(this, "initializing");
-        // @ts-ignore
-        this.babylon = this.querySelector('my-babylon') as IBabylonElement;
-        
-        assertNonNull(this.babylon, "missing my babylon");
-        this.ctx = {
-            status: "Hello",
-            foo: "..."
-        }
+        this.status = "Hello"; 
+        this.addEventListener('babylon.picked', this.#onpicked as EventListener)
     }
 
-    override update(changes: PropertyValues) {
-        debugChanges(this, "updating", changes);
-        super.update(changes);
-    }
-
-    override updated(changed: PropertyValues): void {
-        // NB: broadcasting the ctx may result to new changes somehow
-        if (changed.has('foo')) this.#updateCtx({foo: this.foo});
-    }
-
-    onbabylonpick = (e: PickEvent) => {
-        if (e.detail) {
-            this.#updateCtx({ status: `Selected: ${e.detail.name} (#${e.detail.id})` });
+    #onpicked = (event: PickEvent) => {
+        if (event.detail) {
+            this.status = `Selected: ${event.detail.name} (${event.detail.id})`;
         } else {
-            this.#updateCtx({ status: "..." });
+            this.status = "...";
         }
+    }
+
+    protected override updated(changes: PropertyValues): void {
+        if (changes.has('status')) queueEvent(this, "app.status", this.status);
     }
 } 
